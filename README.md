@@ -8,6 +8,26 @@
 - `scripts/` 逻辑位于 skill 内：初始化项目、自动写入多分支评估模板、ADS 全文审计、公开 PDF 下载、文本提取、通讯作者证据扫描、正式 manifest 生成、论文索引生成、方法谱系引用校验、有界引用邻域构建和滚动时间回测模板生成。
 - `assets/astronomer-config.example.json`：每位天文学家的配置模板。
 
+## 安装
+
+克隆仓库后，将通用 skill 目录复制到本机 Codex skills 目录：
+
+```bash
+git clone https://github.com/xs201611160102/astronomer-research-distiller.git
+mkdir -p ~/.codex/skills
+cp -R astronomer-research-distiller/skill/distill-astronomer-research ~/.codex/skills/
+```
+
+确认安装结果：
+
+```bash
+ls ~/.codex/skills/distill-astronomer-research/SKILL.md
+```
+
+安装后新开一个 Codex 线程，或重启 Codex，让新 skill 被重新加载。之后可直接要求 Codex：
+
+`使用 distill-astronomer-research skill，为某位天文学家构建研究方法 skill。`
+
 ## 核心约束
 
 1. 优先使用 ADS 和官方个人主页。
@@ -25,8 +45,6 @@
 13. 使用保守刷新命令重建本地资产并输出人工复核队列；默认不联网、不覆盖人工策展 JSON。
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
 15. 每个生成型 skill 必须携带 `references/branch-evaluation-protocol.md`，使用统一覆盖矩阵和分支级报告模板，使不同天文学家的论文审查可复现、可比较。
-
-安装后可直接要求 Codex：`使用天文学家论文蒸馏 skill，为某位天文学家构建研究方法 skill。`
 
 ## 校验
 
