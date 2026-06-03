@@ -1,0 +1,5 @@
+{"bibcode": "2024Test....1A", "claim_type": "authorship_role", "source_type": "manifest", "evidence_level": "metadata_or_manual_audit", "source": "ADS identity audit"}
+{"bibcode": "2024Test....1A", "claim_type": "authorship_role", "source_type": "manifest", "evidence_level": "metadata_or_manual_audit", "source": "local PDF text verification"}
+{"bibcode": "2024Test....1A", "claim_type": "correspondence_marker", "source_type": "pdf_text", "evidence_level": "pdf_email_marker", "source": "Corresponding author: Ada Astronomer ada.old@example.edu This fixture represents a calibration paper."}
+{"bibcode": "2024Test....1A", "claim_type": "correspondence_marker", "source_type": "pdf_text", "evidence_level": "explicit_corresponding_author", "source": "Corresponding author: Ada Astronomer ada.old@example.edu This fixture represents a calibration paper."}
+{"bibcode": "2024Test....1A", "claim_type": "method_lineage", "source_type": "codex_synthesis", "evidence_level": "inference_from_paper_sequence", "source": "Test Calibration / Baseline: fixture baseline."}

@@ -1,0 +1,26 @@
+[
+  {
+    "bibcode": "2024Test....1A",
+    "year": 2024,
+    "title": "A Test Calibration Paper",
+    "roles": [
+      "first_author_verified",
+      "explicit_corresponding_author",
+      "pdf_email_marker"
+    ],
+    "top_authors": [
+      "Astronomer, Ada",
+      "Collaborator, B."
+    ],
+    "abstract_excerpt": "",
+    "science_question": "",
+    "data_and_sample": "",
+    "observables": "",
+    "method": "fixture baseline.",
+    "systematics": "",
+    "validation": "",
+    "limitations": "",
+    "lineage_branch": "Test Calibration",
+    "lineage_stage": "Baseline"
+  }
+]

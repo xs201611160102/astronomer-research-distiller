@@ -1,0 +1,4 @@
+interface:
+  display_name: "天文学家论文蒸馏"
+  short_description: "从 ADS 论文与全文证据构建可追溯的天文学家研究方法 skill"
+  default_prompt: "请使用天文学家论文蒸馏 skill，为指定天文学家建立 ADS 优先、证据分级并包含方法谱系的研究方法 skill。"

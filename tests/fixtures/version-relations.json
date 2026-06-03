@@ -1,0 +1,11 @@
+[
+  {
+    "source": "2024Test....1A",
+    "relation": "refines",
+    "target": "2023Test....1A",
+    "scope": "Smoke test.",
+    "effect": "Renders a relation.",
+    "recommendation": "Inspect the fixture.",
+    "evidence_source": "tests/fixtures/2024Test....1A.txt"
+  }
+]

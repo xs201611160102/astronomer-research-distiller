@@ -1,0 +1,34 @@
+{
+  "display_name": "Author Name",
+  "skill_name": "author-research",
+  "orcid": "0000-0000-0000-0000",
+  "top_author_limit": 3,
+  "holdout_cutoff_year": 2023,
+  "rolling_holdout_cutoffs": [
+    2015,
+    2020,
+    2023
+  ],
+  "emails": [
+    "author@current.example.edu"
+  ],
+  "legacy_emails": [
+    "author@legacy.example.edu"
+  ],
+  "name_variants": [
+    "Given Surname",
+    "Surname, Given"
+  ],
+  "explicit_name_patterns": [
+    "Given\\s+Surname",
+    "Surname\\s*,\\s*Given"
+  ],
+  "pdf_fallbacks": {},
+  "semantic_edge_overrides": {},
+  "supplemental_bibcode_tokens": [
+    "yCat",
+    "IAUGA",
+    "eas..conf",
+    "IAUS"
+  ]
+}

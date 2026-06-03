@@ -1,0 +1,12 @@
+[
+  {
+    "claim_id": "FIXTURE-CLAIM",
+    "claim": "The fixture renders an atomic claim.",
+    "claim_type": "smoke_test",
+    "evidence_level": "fixture",
+    "confidence": "high",
+    "review_status": "reviewed",
+    "sources": ["2024Test....1A"],
+    "local_evidence": "tests/fixtures/2024Test....1A.txt"
+  }
+]

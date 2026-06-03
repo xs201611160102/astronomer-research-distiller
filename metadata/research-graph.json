@@ -1,0 +1,14 @@
+{
+  "top_author_limit": 3,
+  "collaborators": [
+    {
+      "name": "Astronomer, Ada",
+      "paper_count": 1
+    },
+    {
+      "name": "Collaborator, B.",
+      "paper_count": 1
+    }
+  ],
+  "citation_edges_within_formal_manifest": []
+}

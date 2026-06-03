@@ -1,0 +1,4 @@
+Corresponding author: Ada Astronomer
+ada.old@example.edu
+
+This fixture represents a calibration paper.

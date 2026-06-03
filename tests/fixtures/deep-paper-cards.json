@@ -1,0 +1,16 @@
+[
+  {
+    "bibcode": "2024Test....1A",
+    "title": "Test calibration paper",
+    "lineage_branch": "Test Calibration",
+    "lineage_role": "Baseline",
+    "science_question": "Can the fixture render a deep card?",
+    "data_and_sample": "One text fixture.",
+    "observables": "A rendered Markdown card.",
+    "method": "Render curated JSON.",
+    "systematics": "None.",
+    "validation": "Smoke test.",
+    "limitations": "Fixture only.",
+    "evidence_source": "text/2024Test....1A.txt lines 1-4"
+  }
+]

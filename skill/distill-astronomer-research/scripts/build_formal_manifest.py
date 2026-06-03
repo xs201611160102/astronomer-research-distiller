@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Build the formal manifest from verified first authors and PDF correspondence evidence."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+from pathlib import Path
+
+
+def load_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=Path, default=Path("config/astronomer.json"))
+    parser.add_argument("--audit-manifest", type=Path, default=Path("metadata/correspondence_audit_manifest.json"))
+    parser.add_argument("--verification", type=Path, default=Path("metadata/correspondence_audit_verification.json"))
+    parser.add_argument("--first-author-bibcodes", type=Path, default=Path("metadata/verified_first_author_bibcodes.txt"))
+    parser.add_argument("--output", type=Path, default=Path("metadata/paper_manifest.json"))
+    parser.add_argument("--audit-papers-dir", type=Path, default=Path("correspondence_audit/papers"))
+    parser.add_argument("--audit-text-dir", type=Path, default=Path("correspondence_audit/text"))
+    parser.add_argument("--papers-dir", type=Path, default=Path("papers"))
+    parser.add_argument("--text-dir", type=Path, default=Path("text"))
+    args = parser.parse_args()
+    config = load_json(args.config)
+    audit = {item["bibcode"]: item for item in load_json(args.audit_manifest)}
+    verification = {item["bibcode"]: item for item in load_json(args.verification)}
+    first_authors = {line.strip() for line in args.first_author_bibcodes.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")}
+    selected = first_authors | {bibcode for bibcode, item in verification.items() if item["status"] == "pdf_text_evidence_found"}
+    records = []
+    for bibcode in sorted(selected, reverse=True):
+        if bibcode not in audit:
+            raise SystemExit(f"Verified bibcode missing from ADS audit manifest: {bibcode}")
+        item = audit[bibcode]
+        evidence = verification.get(bibcode, {}).get("evidence", [])
+        roles = []
+        if bibcode in first_authors:
+            roles.append("first_author_verified")
+        if any(ev["kind"] == "explicit_corresponding_author" for ev in evidence):
+            roles.append("explicit_corresponding_author")
+        if any(ev["kind"] == "pdf_email_marker" for ev in evidence):
+            roles.append("pdf_email_marker")
+        supplemental = any(token in bibcode for token in config.get("supplemental_bibcode_tokens", []))
+        records.append({**item, "roles": roles, "role_evidence": ["ADS identity audit", "local PDF text verification"], "distillation_tier": "supplemental" if supplemental else "core"})
+        for source_dir, target_dir, suffix in ((args.audit_papers_dir, args.papers_dir, ".pdf"), (args.audit_text_dir, args.text_dir, ".txt")):
+            source = source_dir / f"{bibcode}{suffix}"
+            target = target_dir / source.name
+            if source.exists() and not target.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, target)
+    args.output.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(json.dumps({"formal_manifest_records": len(records), "first_author_verified": len(first_authors), "pdf_evidence_records": sum("pdf_email_marker" in item["roles"] or "explicit_corresponding_author" in item["roles"] for item in records)}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

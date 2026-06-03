@@ -1,0 +1,14 @@
+[
+  {
+    "method": "Fixture method",
+    "branch": "Test Calibration",
+    "bibcodes": ["2024Test....1A"],
+    "required_inputs": "One fixture.",
+    "calibrated_domain": "Smoke test.",
+    "expected_performance": "Renders Markdown.",
+    "failure_modes": "Missing fixture.",
+    "fallback": "Stop.",
+    "abstain_when": "The fixture is absent.",
+    "evidence_source": "tests/fixtures/2024Test....1A.txt"
+  }
+]

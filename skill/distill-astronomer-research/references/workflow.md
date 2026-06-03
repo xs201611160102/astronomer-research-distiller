@@ -1,0 +1,145 @@
+# Workflow
+
+## 1. Initialize
+
+Run:
+
+```sh
+python3 scripts/init_astronomer_project.py \
+  --project-dir /path/to/astronomer-folder \
+  --display-name "Author Name" \
+  --skill-name author-research \
+  --orcid 0000-0000-0000-0000 \
+  --email author@example.edu \
+  --legacy-email old-address@example.edu
+```
+
+Edit `config/astronomer.json` as new affiliations, email markers, or PDF fallback
+URLs are discovered.
+
+## 2. Collect ADS Records
+
+Prefer an ADS library linked by an official profile. Save the normalized browser
+scrape as `metadata/ads_official_library.json`.
+
+Also save:
+
+- `metadata/ads_author_search.json`
+- `metadata/ads_first_author_search.json`
+- `metadata/ads_correspondence_search.json`
+- `metadata/ads_correspondence_search_legacy_email.json`, when applicable
+
+Use [ads-collection.md](ads-collection.md) for the expected JSON shape.
+
+## 3. Audit Full Text
+
+From the astronomer project directory, run the bundled scripts:
+
+```sh
+python3 /path/to/skill/scripts/build_ads_audit_manifest.py
+python3 /path/to/skill/scripts/download_public_pdfs.py \
+  --manifest metadata/correspondence_audit_manifest.json \
+  --papers-dir correspondence_audit/papers \
+  --report metadata/correspondence_audit_download_report.json
+python3 /path/to/skill/scripts/extract_pdf_texts.py \
+  --papers-dir correspondence_audit/papers \
+  --text-dir correspondence_audit/text \
+  --report metadata/correspondence_audit_text_extract_report.json
+python3 /path/to/skill/scripts/verify_correspondence_markers.py
+```
+
+## 4. Build Formal Manifest
+
+Create `metadata/verified_first_author_bibcodes.txt` after ADS author-order and
+identity checks. Then run:
+
+```sh
+python3 /path/to/skill/scripts/build_formal_manifest.py
+python3 /path/to/skill/scripts/generate_paper_index.py
+```
+
+## 5. Distill
+
+Generate the reusable review assets first:
+
+```sh
+python3 /path/to/skill/scripts/generate_research_assets.py \
+  --lineage skill/<author-skill>/references/method-lineage.md \
+  --profile-md skill/<author-skill>/references/researcher-profile.md \
+  --graph-md skill/<author-skill>/references/collaboration-map.md \
+  --holdout-md skill/<author-skill>/references/holdout-evaluation.md
+python3 /path/to/skill/scripts/build_method_graph.py \
+  --lineage skill/<author-skill>/references/method-lineage.md \
+  --markdown-output skill/<author-skill>/references/method-graph.md
+python3 /path/to/skill/scripts/generate_rolling_holdout.py \
+  --output skill/<author-skill>/references/rolling-holdout-evaluation.md
+python3 /path/to/skill/scripts/render_deep_cards.py \
+  --cards distillation/deep-paper-cards.json \
+  --output skill/<author-skill>/references/deep-paper-cards.md
+python3 /path/to/skill/scripts/extract_citation_contexts.py \
+  --seeds distillation/core-citation-context-seeds.json \
+  --text-dir text \
+  --output-json metadata/core-citation-contexts.json \
+  --output-md skill/<author-skill>/references/core-citation-contexts.md
+python3 /path/to/skill/scripts/render_method_boundaries.py \
+  --boundaries distillation/method-boundaries.json \
+  --output skill/<author-skill>/references/method-boundaries.md
+python3 /path/to/skill/scripts/render_version_relations.py \
+  --relations distillation/version-relations.json \
+  --output skill/<author-skill>/references/version-relations.md
+python3 /path/to/skill/scripts/render_claim_ledger.py \
+  --ledger distillation/atomic-claims.json \
+  --output skill/<author-skill>/references/atomic-claim-ledger.md
+python3 /path/to/skill/scripts/refresh_distillation_assets.py \
+  --project-dir . \
+  --lineage skill/<author-skill>/references/method-lineage.md \
+  --skill-dir skill/<author-skill>
+```
+
+Read representative PDFs across time, not only highly cited or recent papers.
+Write:
+
+- `distillation/method-synthesis.md`
+- `skill/<author-skill>/references/research-map.md`
+- `skill/<author-skill>/references/method-lineage.md`
+- `skill/<author-skill>/references/method-playbook.md`
+- `skill/<author-skill>/references/source-policy.md`
+
+Review and complete analytical fields in `distillation/paper-cards.json` for
+lineage-defining papers. Use `metadata/evidence-ledger.jsonl` for claim provenance.
+Complete `references/holdout-review.md` after comparing the provisional lineage
+with held-out later papers. Review `metadata/external-comparison-candidates.json`
+and keep a curated method-level subset in `references/external-comparison-set.md`.
+Complete `references/rolling-holdout-review.md` for multiple cutoff years when
+the corpus spans enough time. Treat graph edge semantics as heuristic unless
+manually checked or overridden in project configuration.
+Keep full-text deep cards separate from generated skeletons so that refreshes do
+not overwrite manual reading. Ask the user only about citation-context ambiguity
+that would materially change the method lineage.
+Maintain `references/refresh-protocol.md` and `references/exceptions.md`.
+Explicitly abstain when user data are outside the validated domain with no
+justified fallback. Preserve external conflicts instead of forcing agreement.
+
+## 6. Validate
+
+```sh
+python3 /path/to/skill/scripts/validate_lineage_refs.py
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
+  skill/<author-skill>
+```
+
+Review the diff and sync the derived skill to `~/.codex/skills/<author-skill>`
+only after the evidence and lineage are coherent.
+
+## 7. Refresh
+
+After collecting a newer ADS snapshot, rerun the asset generator. Inspect
+`metadata/update-report.json` for added and removed bibcodes, update cards and
+lineage where needed, then rerun holdout review.
+Refresh the bounded method graph and rolling holdout review when the active
+lineage changes materially.
+Refresh boundaries, version relations, atomic claims, and exceptions whenever
+new evidence changes a recommendation or failure mode.
+Use the conservative refresh command after ADS and PDF preflight. It does not
+collect ADS records, download PDFs, or refresh the network-backed OpenAlex graph
+unless explicitly requested with `--include-method-graph`.

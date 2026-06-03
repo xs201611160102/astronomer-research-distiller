@@ -1,0 +1,10 @@
+[
+  {
+    "source_bibcode": "2024Test....1A",
+    "target_bibcode": "2023Test....1A",
+    "pattern": "Ada Astronomer ada\\.old@example\\.edu",
+    "relation": "extends_method",
+    "confidence": "high",
+    "needs_user_review": false
+  }
+]
