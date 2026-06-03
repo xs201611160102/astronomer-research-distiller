@@ -49,3 +49,55 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 ## 校验
 
 运行 `bash tests/run_smoke_test.sh` 可验证初始化、ADS 审计 manifest、历史邮箱扫描、明确通讯作者识别、正式 manifest、论文索引与方法谱系引用检查。
+
+# Astronomer Research Distiller
+
+This repository packages an ADS-first workflow for collecting an astronomer's papers and distilling their research methods into a reusable Codex skill.
+
+## Deliverables
+
+- `skill/distill-astronomer-research/`: the installable general-purpose skill.
+- Scripts inside the skill: project initialization, branch-aware review templates, ADS audit manifests, public PDF download, text extraction, corresponding-author evidence scans, formal manifest generation, paper-index generation, method-lineage reference validation, bounded citation-neighborhood construction, and rolling holdout templates.
+- `assets/astronomer-config.example.json`: a configuration template for each target astronomer.
+
+## Installation
+
+Clone this repository, then copy the skill directory into your local Codex skills directory:
+
+```bash
+git clone https://github.com/xs201611160102/astronomer-research-distiller.git
+mkdir -p ~/.codex/skills
+cp -R astronomer-research-distiller/skill/distill-astronomer-research ~/.codex/skills/
+```
+
+Check that the skill was installed:
+
+```bash
+ls ~/.codex/skills/distill-astronomer-research/SKILL.md
+```
+
+Open a new Codex thread, or restart Codex, so the new skill is loaded. You can then ask Codex:
+
+`Use the distill-astronomer-research skill to build a research-method skill for an astronomer.`
+
+## Core Rules
+
+1. Prefer ADS and official personal or institutional pages.
+2. Do not treat a single ADS full-text email search as complete recall.
+3. Record both current and historical email addresses.
+4. Keep explicit corresponding-author statements, PDF front-page email markers, and unverified metadata candidates separate.
+5. The distilled output must include a year-ordered method lineage: baselines, extensions, input conditions, validation, and fallback versions.
+6. Use ORCID as an identity anchor, while keeping ADS as the primary astronomy paper index.
+7. In astronomy use cases, track first-author, corresponding-author, and top-three-author papers; do not mechanically infer detailed contribution roles.
+8. Generate paper cards, an evidence ledger, top-three-author collaboration graphs, internal citation edges, update diffs, and time-split validation templates.
+9. Build a bounded one-to-two-hop citation neighborhood around core lineage papers. Automatically assigned citation-edge semantics must be marked as heuristic and remain manually overrideable.
+10. Generate external method-comparison candidates from the citation neighborhood and use multiple cutoff years for rolling holdout checks.
+11. Keep manually read lineage paper cards separate from machine-generated skeletons. Mark method baselines, key extensions, and boundary changes as `deep`; mark applications, reviews, conference abstracts, and transition nodes as `context`. Extract core citation contexts from local full text and send only the small number of lineage-changing ambiguous edges to the user for judgment.
+12. Maintain method boundaries, version and erratum relations, an atomic-claim ledger, refresh protocols, and exception logs. Refuse to apply a method beyond its validated domain when there is no reasonable fallback. Preserve disagreements when external evidence conflicts.
+13. Use conservative refresh commands to rebuild local assets and output a manual-review queue. By default, do not use the network and do not overwrite manually curated JSON.
+14. Every generated astronomer skill must use a branch-aware evaluation protocol: first identify the researcher's actual research branches from their papers and `research-map.md`, classify each as `primary`, `supporting`, or `not applicable`, review relevant branches separately, and synthesize only after branch-level review is complete. Do not assume a fixed list of fields, and do not let the most obvious single thread dominate other genuinely relevant branches.
+15. Every generated skill must include `references/branch-evaluation-protocol.md`, using a shared coverage matrix and branch-level report template so reviews of different astronomers remain reproducible and comparable.
+
+## Validation
+
+Run `bash tests/run_smoke_test.sh` to verify project initialization, ADS audit manifest generation, historical email scanning, explicit corresponding-author detection, formal manifest generation, paper-index generation, and method-lineage reference checks.
