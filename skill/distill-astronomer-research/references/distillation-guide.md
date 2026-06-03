@@ -12,6 +12,11 @@ For each topic, sample early, middle, and recent papers. Identify:
 6. failure boundaries;
 7. fallback method when advanced inputs are missing.
 
+This is a deep-reading rule, not a collection rule: before sampling, attempt to
+download and extract the full public ADS audit corpus and record the completeness
+audit. Representative reading must never be described as a complete publication
+download.
+
 Do not flatten papers into a theme list. A derived skill should explain which
 generation to use and why.
 

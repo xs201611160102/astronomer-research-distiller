@@ -21,53 +21,69 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
 ## Required Workflow
 
 1. Create a project with `scripts/init_astronomer_project.py`.
-2. Confirm identity from an official profile, ORCID, ADS library, affiliations, and
+2. Run `scripts/check_ads_access.py`. If no ADS token is found, ask the user to
+   provide one before claiming ADS completeness; any fallback corpus must be
+   labeled incomplete.
+3. Confirm identity from an official profile, ORCID, ADS library, affiliations, and
    topic continuity. Record uncertainty instead of guessing.
-3. Collect the official ADS library when available. Supplement it with ADS author
-   and first-author searches.
-4. Build an ADS audit manifest and download publicly accessible PDFs.
-5. Extract PDF text and scan current plus historical email markers.
-6. Separate:
+4. Collect the official ADS library when available. Supplement it with ADS author
+   and first-author searches. Optionally run `scripts/harvest_local_corpus_seeds.py`
+   to discover supplemental local cross-seeds from existing astronomer projects
+   and installed skills; do not hard-code one person's library as a general source.
+5. Build a merged all-corpus ADS audit manifest from every collected ADS source.
+   Download every publicly accessible PDF in that manifest, not only a representative
+   subset.
+6. Run `scripts/audit_corpus_completeness.py` before distillation. If the audit
+   corpus is incomplete, either complete ADS/PDF collection or explicitly document
+   the limitation as an exception; never present a representative core set as the
+   complete bibliography.
+7. Extract PDF text for the full audit corpus and scan current plus historical email markers.
+8. Separate:
    - first-author records confirmed from ADS author order and identity checks;
    - explicit corresponding-author wording;
    - PDF first-page email-marker evidence;
    - unverified metadata candidates.
-7. Build the formal paper manifest from confirmed roles only.
-8. Generate researcher assets with `scripts/generate_research_assets.py`: ORCID
+9. Build the formal paper manifest from confirmed roles only. If this manifest is
+   a curated core set rather than all downloaded papers, label it as such in the
+   project README, source policy, and paper index.
+10. Generate researcher assets with `scripts/generate_research_assets.py`: ORCID
    profile, paper-card skeletons, provenance ledger, top-three-author collaboration
    map, internal citation edges, update diff, and temporal holdout template.
-9. Build a bounded method graph with `scripts/build_method_graph.py`: classify
+11. Build a bounded method graph with `scripts/build_method_graph.py`: classify
    citation edges heuristically, expand one to two hops around lineage papers, and
    generate external comparison candidates for manual review.
-10. Generate rolling temporal holdout templates with
+12. Generate rolling temporal holdout templates with
     `scripts/generate_rolling_holdout.py`, then complete a human-reviewed audit for
     multiple cutoff years when the corpus spans enough time.
-11. Distill themes from representative full texts and complete the paper cards for
+13. Distill themes from representative full texts and complete the paper cards for
    lineage-defining papers. Preserve manually curated cards separately and render
    them with `scripts/render_deep_cards.py`.
-12. Extract core full-text citation contexts with
+14. Extract core full-text citation contexts with
    `scripts/extract_citation_contexts.py`. Resolve clear method inheritance
    directly; ask the user only about ambiguous edges that would change the lineage.
-13. Build `method-lineage.md`: baseline, refinements, required inputs, validation
+15. Build `method-lineage.md`: baseline, refinements, required inputs, validation
     layers, fallback generation, and extrapolation boundaries.
-14. Add a branch-aware evaluation protocol to the derived skill. Require every
+16. Add a branch-aware evaluation protocol to the derived skill. Require every
     manuscript, workflow, or proposal review to enumerate all branches in
     `research-map.md`, classify their relevance, review each relevant branch
     separately, and synthesize only after the branch-level reviews are complete.
-15. Curate and render method boundaries, version relations, and atomic claims
+17. Curate and render method boundaries, version relations, and atomic claims
     with `scripts/render_method_boundaries.py`,
     `scripts/render_version_relations.py`, and `scripts/render_claim_ledger.py`.
     Maintain `refresh-protocol.md` and `exceptions.md`.
-16. Use `scripts/refresh_distillation_assets.py` for conservative local refreshes.
+18. Use `scripts/refresh_distillation_assets.py` for conservative local refreshes.
     It must preserve curated JSON, skip network graph refresh unless explicitly
     requested, and generate a manual-review queue.
-17. Generate and validate the derived astronomer skill, update the project README,
+19. Generate and validate the derived astronomer skill, update the project README,
     and install only after review.
 
 ## Guardrails
 
 - Use ADS as the primary astronomy bibliography.
 - Do not rely on one ADS full-text query: coverage is incomplete.
+- Do not use a small set of representative papers as the corpus-collection result.
+  Representative sampling is only for deep reading after the all-corpus download
+  attempt and completeness audit are recorded.
 - Search historical affiliations and email addresses.
 - Record ORCID as an identity anchor when available, but do not treat it as a
   complete publication list.
@@ -77,6 +93,8 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
 - Do not automatically prefer the newest paper when its required inputs are absent.
 - Do not simulate the astronomer's voice or claim to represent the person.
 - Keep paper-specific claims traceable to ADS bibcodes and PDF evidence.
+- Keep all-corpus provenance traceable too: ADS source counts, audit manifest count,
+  PDF download counts, extracted-text counts, and formal-manifest counts.
 - For astronomy-focused attribution, prioritize first authors, corresponding
   authors, and at most the first three listed authors. Do not infer detailed
   contribution roles without source evidence.

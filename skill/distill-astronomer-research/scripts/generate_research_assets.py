@@ -93,7 +93,7 @@ def abstract_excerpt(text_path: Path) -> str:
 
 def extract_openalex_edges(openalex_path: Path, manifest: list[dict]) -> list[dict]:
     payload = load_json(openalex_path, {}) or {}
-    works = payload.get("results", payload if isinstance(payload, list) else [])
+    works = payload.get("results", []) if isinstance(payload, dict) else (payload if isinstance(payload, list) else [])
     formal_by_title = {normalize_title(item["title"]): item["bibcode"] for item in manifest}
     id_to_bibcode = {}
     for work in works:

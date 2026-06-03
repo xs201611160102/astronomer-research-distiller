@@ -11,10 +11,17 @@ python3 "$skill_dir/scripts/init_astronomer_project.py" \
   --skill-name ada-astronomer-research \
   --email ada@example.edu \
   --legacy-email ada.old@example.edu
+python3 "$skill_dir/scripts/check_ads_access.py" \
+  --output-json "$project_dir/metadata/ads_access_preflight.json" \
+  --output-md "$project_dir/metadata/ads_access_preflight.md"
 cp "$fixture_dir/ads_official_library.json" "$project_dir/metadata/ads_official_library.json"
 python3 "$skill_dir/scripts/build_ads_audit_manifest.py" \
   --library "$project_dir/metadata/ads_official_library.json" \
   --output "$project_dir/metadata/correspondence_audit_manifest.json"
+python3 "$skill_dir/scripts/audit_corpus_completeness.py" \
+  --project-dir "$project_dir" \
+  --output-json "$project_dir/metadata/corpus_completeness_audit.json" \
+  --output-md "$project_dir/metadata/corpus_completeness_audit.md"
 cp "$fixture_dir/2024Test....1A.txt" "$project_dir/correspondence_audit/text/2024Test....1A.txt"
 python3 "$skill_dir/scripts/verify_correspondence_markers.py" \
   --config "$project_dir/config/astronomer.json" \
@@ -95,6 +102,8 @@ project = Path(sys.argv[1])
 branch_protocol = project / "skill/ada-astronomer-research/references/branch-evaluation-protocol.md"
 assert branch_protocol.exists()
 assert "Build The Relevance Matrix" in branch_protocol.read_text()
+ads_preflight = json.loads((project / "metadata/ads_access_preflight.json").read_text())
+assert "ADS_DEV_KEY" in ads_preflight["sources_checked"]
 manifest = json.loads((project / "metadata/paper_manifest.json").read_text())
 assert len(manifest) == 1
 assert manifest[0]["roles"] == [
@@ -107,6 +116,10 @@ assert cards[0]["lineage_branch"] == "Test Calibration"
 assert cards[0]["lineage_stage"] == "Baseline"
 assert (project / "metadata/evidence-ledger.jsonl").exists()
 assert (project / "metadata/update-report.json").exists()
+corpus_audit = json.loads((project / "metadata/corpus_completeness_audit.json").read_text())
+assert corpus_audit["ads_unique_bibcodes"] == 2
+assert corpus_audit["audit_manifest_records"] == 2
+assert "No PDF download report found" in " ".join(corpus_audit["warnings"])
 rolling = (project / "skill/ada-astronomer-research/references/rolling-holdout-evaluation.md").read_text()
 assert "Cutoff 2023" in rolling
 assert "2024Test....1A" in rolling

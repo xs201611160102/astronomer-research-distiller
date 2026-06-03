@@ -43,10 +43,15 @@
 - Define evidence levels.
 - Record local provenance files.
 - Separate PDF email markers from explicit corresponding-author wording.
+- Distinguish the all-corpus audit/download set from a curated core manifest.
+- Link to the project `metadata/corpus_completeness_audit.md` or document the
+  exception that prevented all-corpus collection.
 
 ## paper-index.md
 
 - Generate from `metadata/paper_manifest.json`.
+- State whether the index is complete, role-confirmed, or a curated
+  method-distillation core.
 
 ## researcher-profile.md
 

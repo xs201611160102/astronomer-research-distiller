@@ -8,6 +8,8 @@
 ├── metadata/
 │   ├── ads_official_library.json
 │   ├── correspondence_audit_manifest.json
+│   ├── corpus_completeness_audit.json
+│   ├── corpus_completeness_audit.md
 │   ├── correspondence_audit_verification.json
 │   ├── evidence-ledger.jsonl
 │   ├── research-graph.json
@@ -54,5 +56,7 @@
             └── manual-review-queue.md
 ```
 
-Keep audit downloads separate from formal evidence. Only copy promoted records
-into `papers/` and `text/`.
+Keep audit downloads separate from formal evidence. The audit area should attempt
+to cover every publicly downloadable PDF in the merged ADS corpus. Only copy
+promoted records into `papers/` and `text/`, and clearly label that promoted set
+as a curated core when it is smaller than the audit corpus.

@@ -45,6 +45,7 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 13. 使用保守刷新命令重建本地资产并输出人工复核队列；默认不联网、不覆盖人工策展 JSON。
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
 15. 每个生成型 skill 必须携带 `references/branch-evaluation-protocol.md`，使用统一覆盖矩阵和分支级报告模板，使不同天文学家的论文审查可复现、可比较。
+16. 语料收集阶段必须合并所有已收集 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
 
 ## 校验
 
@@ -97,7 +98,9 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 13. Use conservative refresh commands to rebuild local assets and output a manual-review queue. By default, do not use the network and do not overwrite manually curated JSON.
 14. Every generated astronomer skill must use a branch-aware evaluation protocol: first identify the researcher's actual research branches from their papers and `research-map.md`, classify each as `primary`, `supporting`, or `not applicable`, review relevant branches separately, and synthesize only after branch-level review is complete. Do not assume a fixed list of fields, and do not let the most obvious single thread dominate other genuinely relevant branches.
 15. Every generated skill must include `references/branch-evaluation-protocol.md`, using a shared coverage matrix and branch-level report template so reviews of different astronomers remain reproducible and comparable.
+16. Corpus collection must merge all collected ADS sources and attempt to download every publicly accessible PDF. Representative papers are only for later deep reading and method-lineage synthesis; they cannot replace full-corpus download. Run `audit_corpus_completeness.py` to record ADS, download, text-extraction, and formal-manifest counts.
+17. Run `check_ads_access.py` before ADS collection. If `ADS_DEV_KEY`, `ADS_TOKEN`, or keychain service `ads-api-token` is missing, ask the user to provide an ADS token and label any fallback corpus as incomplete.
 
 ## Validation
 
-Run `bash tests/run_smoke_test.sh` to verify project initialization, ADS audit manifest generation, historical email scanning, explicit corresponding-author detection, formal manifest generation, paper-index generation, and method-lineage reference checks.
+Run `bash tests/run_smoke_test.sh` to verify project initialization, ADS access preflight reporting, merged ADS audit manifest generation, corpus completeness reporting, historical email scanning, explicit corresponding-author detection, formal manifest generation, paper-index generation, and method-lineage reference checks.

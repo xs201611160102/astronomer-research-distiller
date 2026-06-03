@@ -17,7 +17,25 @@ python3 scripts/init_astronomer_project.py \
 Edit `config/astronomer.json` as new affiliations, email markers, or PDF fallback
 URLs are discovered.
 
-## 2. Collect ADS Records
+## 2. ADS Access Preflight
+
+Run:
+
+```sh
+python3 /path/to/skill/scripts/check_ads_access.py
+```
+
+The script checks `ADS_DEV_KEY`, `ADS_TOKEN`, and the Apple Keychain service
+`ads-api-token`. If no token is found, ask the user to add one before claiming
+that ADS author search or the ADS corpus is complete. A fallback corpus built
+from local seeds or OpenAlex must be labeled incomplete.
+
+In a managed Codex sandbox, reading the macOS Keychain may require an escalated
+command. If the preflight reports missing keychain token but the user says they
+added one, rerun the preflight with approval rather than assuming the token is
+absent.
+
+## 3. Collect ADS Records
 
 Prefer an ADS library linked by an official profile. Save the normalized browser
 scrape as `metadata/ads_official_library.json`.
@@ -31,12 +49,37 @@ Also save:
 
 Use [ads-collection.md](ads-collection.md) for the expected JSON shape.
 
-## 3. Audit Full Text
+Do not stop after finding several representative papers. The collection target is
+the broad ADS corpus for the identity, with same-name rejects documented separately.
+If ADS API or browser access is unavailable, create an explicit exception and use
+OpenAlex, ORCID, publisher pages, or official publication lists only as audit
+helpers until ADS can be checked.
+
+Before falling back to web indexes, also harvest local cross-seeds from existing
+astronomer projects and installed skills:
+
+```sh
+python3 /path/to/skill/scripts/harvest_local_corpus_seeds.py \
+  --project-dir . \
+  --output metadata/local_corpus_seed_records.json
+```
+
+This scans local JSON corpora such as `metadata/ads*.json`,
+`metadata/paper_manifest.json`, and future installed-skill `corpus-records.json`
+files for the configured name variants. Local cross-seeds are supplemental:
+use them to discover missing ADS records, not as a replacement for ADS author
+searches.
+
+## 4. Audit Full Text
 
 From the astronomer project directory, run the bundled scripts:
 
 ```sh
-python3 /path/to/skill/scripts/build_ads_audit_manifest.py
+python3 /path/to/skill/scripts/build_ads_audit_manifest.py \
+  --library metadata/ads_official_library.json \
+  --library metadata/ads_author_search.json \
+  --library metadata/ads_first_author_search.json \
+  --library metadata/local_corpus_seed_records.json
 python3 /path/to/skill/scripts/download_public_pdfs.py \
   --manifest metadata/correspondence_audit_manifest.json \
   --papers-dir correspondence_audit/papers \
@@ -46,9 +89,16 @@ python3 /path/to/skill/scripts/extract_pdf_texts.py \
   --text-dir correspondence_audit/text \
   --report metadata/correspondence_audit_text_extract_report.json
 python3 /path/to/skill/scripts/verify_correspondence_markers.py
+python3 /path/to/skill/scripts/audit_corpus_completeness.py
 ```
 
-## 4. Build Formal Manifest
+The download step is for every publicly accessible PDF in
+`metadata/correspondence_audit_manifest.json`, not only the papers that look
+lineage-defining. Use representative subsets only later, during deep reading.
+If some records are unavailable, keep the download report and completeness audit
+as the provenance.
+
+## 5. Build Formal Manifest
 
 Create `metadata/verified_first_author_bibcodes.txt` after ADS author-order and
 identity checks. Then run:
@@ -58,7 +108,12 @@ python3 /path/to/skill/scripts/build_formal_manifest.py
 python3 /path/to/skill/scripts/generate_paper_index.py
 ```
 
-## 5. Distill
+The formal manifest can be smaller than the audit corpus when it contains only
+confirmed first-author and corresponding-author roles. If so, label it as a
+curated core or role-confirmed manifest in `README.md`, `source-policy.md`, and
+`paper-index.md`; do not call it the complete publication list.
+
+## 6. Distill
 
 Generate the reusable review assets first:
 
@@ -120,7 +175,7 @@ Maintain `references/refresh-protocol.md` and `references/exceptions.md`.
 Explicitly abstain when user data are outside the validated domain with no
 justified fallback. Preserve external conflicts instead of forcing agreement.
 
-## 6. Validate
+## 7. Validate
 
 ```sh
 python3 /path/to/skill/scripts/validate_lineage_refs.py
@@ -131,7 +186,7 @@ python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
 Review the diff and sync the derived skill to `~/.codex/skills/<author-skill>`
 only after the evidence and lineage are coherent.
 
-## 7. Refresh
+## 8. Refresh
 
 After collecting a newer ADS snapshot, rerun the asset generator. Inspect
 `metadata/update-report.json` for added and removed bibcodes, update cards and
