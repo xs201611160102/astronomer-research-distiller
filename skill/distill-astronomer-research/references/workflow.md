@@ -115,7 +115,8 @@ python3 /path/to/skill/scripts/download_public_pdfs.py \
 python3 /path/to/skill/scripts/extract_pdf_texts.py \
   --papers-dir correspondence_audit/papers \
   --text-dir correspondence_audit/text \
-  --report metadata/correspondence_audit_text_extract_report.json
+  --report metadata/correspondence_audit_text_extract_report.json \
+  --manifest metadata/correspondence_audit_manifest.json
 python3 /path/to/skill/scripts/verify_correspondence_markers.py
 python3 /path/to/skill/scripts/audit_corpus_completeness.py
 ```

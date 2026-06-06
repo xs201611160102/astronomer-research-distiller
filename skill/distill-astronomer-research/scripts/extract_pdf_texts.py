@@ -14,10 +14,21 @@ def main() -> None:
     parser.add_argument("--papers-dir", type=Path, required=True)
     parser.add_argument("--text-dir", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=None,
+        help="Optional audit manifest. When provided, extract only PDFs whose bibcodes are in the manifest.",
+    )
     args = parser.parse_args()
     args.text_dir.mkdir(parents=True, exist_ok=True)
+    allowed_bibcodes = None
+    if args.manifest:
+        allowed_bibcodes = {item["bibcode"] for item in json.loads(args.manifest.read_text(encoding="utf-8"))}
     report = []
     for pdf in sorted(args.papers_dir.glob("*.pdf")):
+        if allowed_bibcodes is not None and pdf.stem not in allowed_bibcodes:
+            continue
         text = args.text_dir / f"{pdf.stem}.txt"
         result = subprocess.run(["pdftotext", str(pdf), str(text)], capture_output=True, text=True)
         status = "extracted" if result.returncode == 0 and text.exists() else "failed"
