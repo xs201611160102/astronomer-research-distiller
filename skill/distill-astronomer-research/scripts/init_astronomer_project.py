@@ -45,6 +45,24 @@ def main() -> None:
         "explicit_name_patterns": [],
         "pdf_fallbacks": {},
         "supplemental_bibcode_tokens": ["yCat", "IAUGA", "eas..conf", "IAUS"],
+        "identity_filter": {
+            "min_score": 3,
+            "first_author_initial_variants": [],
+            "topic_keywords": [],
+            "trusted_coauthors": [],
+            "affiliation_keywords": [],
+            "venue_keywords": [
+                "The Astrophysical Journal",
+                "The Astrophysical Journal Supplement Series",
+                "Astronomy & Astrophysics",
+                "Monthly Notices of the Royal Astronomical Society",
+                "Nature",
+                "Nature Astronomy",
+                "Research in Astronomy and Astrophysics",
+                "The Astronomical Journal",
+            ],
+            "reject_keywords": [],
+        },
     }
     config_path = args.project_dir / "config/astronomer.json"
     if not config_path.exists():

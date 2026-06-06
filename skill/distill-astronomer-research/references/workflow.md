@@ -70,16 +70,32 @@ files for the configured name variants. Local cross-seeds are supplemental:
 use them to discover missing ADS records, not as a replacement for ADS author
 searches.
 
+Before building the download manifest, make the identity anchors explicit in
+`config/astronomer.json`: official/historical affiliations, full and initial-only
+name variants, recurring topic keywords, stable coauthors, journal or venue
+signals, and same-name reject keywords. Then filter the raw ADS sources:
+
+```sh
+python3 /path/to/skill/scripts/filter_ads_identity_candidates.py \
+  --input metadata/ads_author_search.json \
+  --input metadata/ads_first_author_search.json \
+  --input metadata/local_corpus_seed_records.json \
+  --config config/astronomer.json \
+  --accepted metadata/ads_identity_filtered_records.json \
+  --rejected metadata/ads_identity_rejected_records.json \
+  --first-author-bibcodes metadata/verified_first_author_bibcodes.txt
+```
+
+Treat this as a reproducible same-name audit. The accepted file feeds the full
+PDF audit; the rejected file documents false positives and ambiguous records.
+
 ## 4. Audit Full Text
 
 From the astronomer project directory, run the bundled scripts:
 
 ```sh
 python3 /path/to/skill/scripts/build_ads_audit_manifest.py \
-  --library metadata/ads_official_library.json \
-  --library metadata/ads_author_search.json \
-  --library metadata/ads_first_author_search.json \
-  --library metadata/local_corpus_seed_records.json
+  --library metadata/ads_identity_filtered_records.json
 python3 /path/to/skill/scripts/download_public_pdfs.py \
   --manifest metadata/correspondence_audit_manifest.json \
   --papers-dir correspondence_audit/papers \

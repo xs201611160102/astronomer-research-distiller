@@ -24,6 +24,15 @@ def choose_pdf_links(links: list[dict]) -> list[str]:
     )
 
 
+def arxiv_pdf_links(identifiers: list[str]) -> list[str]:
+    links = []
+    for identifier in identifiers or []:
+        match = re.search(r"(?:arXiv:|arxiv/)?(\d{4}\.\d{4,5})(?:v\d+)?", identifier, re.I)
+        if match:
+            links.append(f"https://arxiv.org/pdf/{match.group(1)}")
+    return sorted(set(links))
+
+
 def load_records(path: Path) -> list[dict]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(payload, dict) and "results" in payload:
@@ -63,6 +72,7 @@ def main() -> None:
                     "title": normalize_title(item.get("title", "")),
                     "authors_display": item.get("authors_display", ""),
                     "links": [],
+                    "identifier": [],
                     "source_files": [],
                 },
             )
@@ -71,11 +81,13 @@ def main() -> None:
             if not existing["authors_display"] and item.get("authors_display"):
                 existing["authors_display"] = item.get("authors_display", "")
             existing["links"].extend(item.get("links", []))
+            existing["identifier"].extend(item.get("identifier", []) or [])
             existing["source_files"].append(str(library_path))
 
     records = []
     for item in sorted(by_bibcode.values(), key=lambda record: record["bibcode"], reverse=True):
         source_files = sorted(set(item["source_files"]))
+        pdf_links = sorted(set(arxiv_pdf_links(item.get("identifier", [])) + choose_pdf_links(item.get("links", []))))
         records.append(
             {
                 "bibcode": item["bibcode"],
@@ -83,7 +95,7 @@ def main() -> None:
                 "authors_display": item["authors_display"],
                 "roles": ["ads_corpus_audit_candidate"],
                 "role_evidence": [f"record included in {source}" for source in source_files],
-                "pdf_links": choose_pdf_links(item.get("links", [])),
+                "pdf_links": pdf_links,
                 "distillation_tier": "audit",
             }
         )

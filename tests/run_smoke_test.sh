@@ -15,6 +15,29 @@ python3 "$skill_dir/scripts/check_ads_access.py" \
   --output-json "$project_dir/metadata/ads_access_preflight.json" \
   --output-md "$project_dir/metadata/ads_access_preflight.md"
 cp "$fixture_dir/ads_official_library.json" "$project_dir/metadata/ads_official_library.json"
+python3 - "$project_dir" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+config_path = Path(sys.argv[1]) / "config/astronomer.json"
+config = json.loads(config_path.read_text())
+config["identity_filter"].update(
+    {
+        "topic_keywords": ["LAMOST", "stellar", "Galactic", "spectra"],
+        "trusted_coauthors": ["Rix"],
+        "affiliation_keywords": ["National Astronomical Observatories"],
+        "reject_keywords": ["reinforced concrete", "seismic performance"],
+    }
+)
+config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n")
+PY
+python3 "$skill_dir/scripts/filter_ads_identity_candidates.py" \
+  --input "$fixture_dir/ads_identity_mixed.json" \
+  --config "$project_dir/config/astronomer.json" \
+  --accepted "$project_dir/metadata/ads_identity_filtered_records.json" \
+  --rejected "$project_dir/metadata/ads_identity_rejected_records.json" \
+  --first-author-bibcodes "$project_dir/metadata/verified_first_author_bibcodes.txt"
 python3 "$skill_dir/scripts/build_ads_audit_manifest.py" \
   --library "$project_dir/metadata/ads_official_library.json" \
   --output "$project_dir/metadata/correspondence_audit_manifest.json"
@@ -104,6 +127,10 @@ assert branch_protocol.exists()
 assert "Build The Relevance Matrix" in branch_protocol.read_text()
 ads_preflight = json.loads((project / "metadata/ads_access_preflight.json").read_text())
 assert "ADS_DEV_KEY" in ads_preflight["sources_checked"]
+accepted_identity = json.loads((project / "metadata/ads_identity_filtered_records.json").read_text())
+rejected_identity = json.loads((project / "metadata/ads_identity_rejected_records.json").read_text())
+assert accepted_identity[0]["bibcode"] == "2025Test....1A"
+assert rejected_identity[0]["bibcode"] == "2025False...1A"
 manifest = json.loads((project / "metadata/paper_manifest.json").read_text())
 assert len(manifest) == 1
 assert manifest[0]["roles"] == [
@@ -117,7 +144,8 @@ assert cards[0]["lineage_stage"] == "Baseline"
 assert (project / "metadata/evidence-ledger.jsonl").exists()
 assert (project / "metadata/update-report.json").exists()
 corpus_audit = json.loads((project / "metadata/corpus_completeness_audit.json").read_text())
-assert corpus_audit["ads_unique_bibcodes"] == 2
+assert corpus_audit["ads_raw_unique_bibcodes"] == 2
+assert corpus_audit["ads_identity_filtered_bibcodes"] == 1
 assert corpus_audit["audit_manifest_records"] == 2
 assert "No PDF download report found" in " ".join(corpus_audit["warnings"])
 rolling = (project / "skill/ada-astronomer-research/references/rolling-holdout-evaluation.md").read_text()

@@ -182,7 +182,7 @@ def main() -> None:
     lineage = parse_lineage(args.lineage)
     formal_by_title = {normalize_title(item["title"]): item["bibcode"] for item in manifest}
     local_payload = load_json(args.openalex_works, {}) or {}
-    local_works = local_payload.get("results", local_payload if isinstance(local_payload, list) else [])
+    local_works = local_payload.get("results", []) if isinstance(local_payload, dict) else (local_payload if isinstance(local_payload, list) else [])
     local_by_title = {normalize_title(work.get("title", "")): work for work in local_works}
     core_works = {}
     missing_core = []

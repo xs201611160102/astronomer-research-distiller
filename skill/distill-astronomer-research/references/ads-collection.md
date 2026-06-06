@@ -58,6 +58,37 @@ source provenance in `role_evidence`.
 
 ## Identity Checks
 
-Reject same-name records when affiliation, topic, coauthor network, ORCID, or
-publication history conflicts with the target identity. Keep a short audit note
-for ambiguous records.
+ADS name searches can return same-name and same-initial authors, including records
+from non-astronomy fields. Make identity filtering a reproducible configuration
+step instead of a one-off manual judgment.
+
+Fill `config/astronomer.json` with:
+
+- `name_variants`: full ADS author-name variants.
+- `identity_filter.first_author_initial_variants`: initial-only forms to accept
+  only when other identity signals agree.
+- `identity_filter.topic_keywords`: recurring astronomy topics, instruments,
+  surveys, methods, and objects from the target's official profile and papers.
+- `identity_filter.trusted_coauthors`: stable collaborators that recur across
+  multiple career stages.
+- `identity_filter.affiliation_keywords`: official and historical institutions.
+- `identity_filter.reject_keywords`: non-target fields that appear in ADS raw
+  results for the same name.
+
+Then run:
+
+```sh
+python3 /path/to/skill/scripts/filter_ads_identity_candidates.py \
+  --input metadata/ads_author_search.json \
+  --input metadata/ads_first_author_search.json \
+  --input metadata/local_corpus_seed_records.json \
+  --config config/astronomer.json \
+  --accepted metadata/ads_identity_filtered_records.json \
+  --rejected metadata/ads_identity_rejected_records.json \
+  --first-author-bibcodes metadata/verified_first_author_bibcodes.txt
+```
+
+Use `metadata/ads_identity_filtered_records.json` as the ADS source for the audit
+manifest. Keep `metadata/ads_identity_rejected_records.json` so future refreshes
+can explain why same-name records were excluded. Review low-score accepted records
+and high-score rejected records manually before treating the corpus as complete.

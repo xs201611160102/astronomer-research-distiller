@@ -31,9 +31,11 @@ def normalized_records(path: Path) -> list[dict]:
     return payload if isinstance(payload, list) else []
 
 
-def count_ads_sources(metadata: Path) -> tuple[dict[str, int], set[str]]:
+def count_ads_sources(metadata: Path) -> tuple[dict[str, int], set[str], set[str], set[str]]:
     counts = {}
-    bibcodes = set()
+    raw_bibcodes = set()
+    filtered_bibcodes = set()
+    rejected_bibcodes = set()
     candidate_paths = []
     for name in ADS_SOURCE_NAMES:
         candidate_paths.append(metadata / name)
@@ -50,8 +52,13 @@ def count_ads_sources(metadata: Path) -> tuple[dict[str, int], set[str]]:
         if not record_bibcodes:
             continue
         counts[path.name] = len(records)
-        bibcodes.update(record_bibcodes)
-    return counts, bibcodes
+        if path.name == "ads_identity_filtered_records.json":
+            filtered_bibcodes.update(record_bibcodes)
+        elif path.name == "ads_identity_rejected_records.json":
+            rejected_bibcodes.update(record_bibcodes)
+        else:
+            raw_bibcodes.update(record_bibcodes)
+    return counts, raw_bibcodes, filtered_bibcodes, rejected_bibcodes
 
 
 def download_counts(report_path: Path) -> Counter:
@@ -81,7 +88,10 @@ def render_markdown(summary: dict) -> str:
         "",
         "## Counts",
         "",
-        f"- ADS source records, de-duplicated: {summary['ads_unique_bibcodes']}",
+        f"- ADS raw records, de-duplicated: {summary['ads_raw_unique_bibcodes']}",
+        f"- ADS identity-filtered records: {summary['ads_identity_filtered_bibcodes']}",
+        f"- ADS same-name rejected records: {summary['ads_identity_rejected_bibcodes']}",
+        f"- ADS corpus baseline records: {summary['ads_corpus_baseline_bibcodes']}",
         f"- Local cross-seed records: {summary['local_seed_records']}",
         f"- ADS audit manifest records: {summary['audit_manifest_records']}",
         f"- Audit PDFs downloaded or already present: {summary['downloaded_or_existing_pdfs']}",
@@ -140,7 +150,8 @@ def main() -> None:
         return path if path.is_absolute() else project / path
 
     metadata = resolve(args.metadata_dir)
-    ads_source_counts, ads_bibcodes = count_ads_sources(metadata)
+    ads_source_counts, ads_raw_bibcodes, ads_filtered_bibcodes, ads_rejected_bibcodes = count_ads_sources(metadata)
+    ads_baseline_bibcodes = ads_filtered_bibcodes or ads_raw_bibcodes
     audit_manifest = normalized_records(resolve(args.audit_manifest))
     download_counter = download_counts(resolve(args.download_report))
     downloaded_or_existing = download_counter.get("downloaded", 0) + download_counter.get("existing", 0)
@@ -149,7 +160,9 @@ def main() -> None:
     warnings = []
     if not ads_source_counts:
         warnings.append("No normalized ADS source file was found; collect ADS records before distillation.")
-    if ads_bibcodes and len(audit_manifest) < len(ads_bibcodes):
+    if ads_filtered_bibcodes and not ads_rejected_bibcodes:
+        warnings.append("ADS identity-filtered records exist but no same-name rejected file was found; keep rejected records for provenance.")
+    if ads_baseline_bibcodes and len(audit_manifest) < len(ads_baseline_bibcodes):
         warnings.append("ADS audit manifest has fewer records than the de-duplicated ADS source corpus.")
     if audit_manifest and not download_counter:
         warnings.append("No PDF download report found; run download_public_pdfs.py for the full audit manifest.")
@@ -165,7 +178,11 @@ def main() -> None:
 
     summary = {
         "ads_source_counts": ads_source_counts,
-        "ads_unique_bibcodes": len(ads_bibcodes),
+        "ads_raw_unique_bibcodes": len(ads_raw_bibcodes),
+        "ads_identity_filtered_bibcodes": len(ads_filtered_bibcodes),
+        "ads_identity_rejected_bibcodes": len(ads_rejected_bibcodes),
+        "ads_corpus_baseline_bibcodes": len(ads_baseline_bibcodes),
+        "ads_unique_bibcodes": len(ads_baseline_bibcodes),
         "local_seed_records": local_seed_count(resolve(args.local_seeds)),
         "audit_manifest_records": len(audit_manifest),
         "download_status_counts": dict(download_counter),

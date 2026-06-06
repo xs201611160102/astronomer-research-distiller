@@ -30,23 +30,26 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
    and first-author searches. Optionally run `scripts/harvest_local_corpus_seeds.py`
    to discover supplemental local cross-seeds from existing astronomer projects
    and installed skills; do not hard-code one person's library as a general source.
-5. Build a merged all-corpus ADS audit manifest from every collected ADS source.
+5. Fill the `identity_filter` block in `config/astronomer.json`, then run
+   `scripts/filter_ads_identity_candidates.py` to split raw ADS records into
+   accepted target-identity records and same-name rejects. Preserve both files.
+6. Build a merged all-corpus ADS audit manifest from the identity-filtered ADS source.
    Download every publicly accessible PDF in that manifest, not only a representative
    subset.
-6. Run `scripts/audit_corpus_completeness.py` before distillation. If the audit
+7. Run `scripts/audit_corpus_completeness.py` before distillation. If the audit
    corpus is incomplete, either complete ADS/PDF collection or explicitly document
    the limitation as an exception; never present a representative core set as the
    complete bibliography.
-7. Extract PDF text for the full audit corpus and scan current plus historical email markers.
-8. Separate:
+8. Extract PDF text for the full audit corpus and scan current plus historical email markers.
+9. Separate:
    - first-author records confirmed from ADS author order and identity checks;
    - explicit corresponding-author wording;
    - PDF first-page email-marker evidence;
    - unverified metadata candidates.
-9. Build the formal paper manifest from confirmed roles only. If this manifest is
+10. Build the formal paper manifest from confirmed roles only. If this manifest is
    a curated core set rather than all downloaded papers, label it as such in the
    project README, source policy, and paper index.
-10. Generate researcher assets with `scripts/generate_research_assets.py`: ORCID
+11. Generate researcher assets with `scripts/generate_research_assets.py`: ORCID
    profile, paper-card skeletons, provenance ledger, top-three-author collaboration
    map, internal citation edges, update diff, and temporal holdout template.
 11. Build a bounded method graph with `scripts/build_method_graph.py`: classify
