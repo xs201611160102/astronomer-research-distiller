@@ -198,6 +198,9 @@ assert manifest[0]["roles"] == [
     "explicit_corresponding_author",
     "pdf_email_marker",
 ]
+verification = json.loads((project / "metadata/correspondence_audit_verification.json").read_text())
+email_markers = [ev for item in verification for ev in item["evidence"] if ev["kind"] == "pdf_email_marker"]
+assert len(email_markers) == 1
 cards = json.loads((project / "distillation/paper-cards.json").read_text())
 assert cards[0]["lineage_branch"] == "Test Calibration"
 assert cards[0]["lineage_stage"] == "Baseline"

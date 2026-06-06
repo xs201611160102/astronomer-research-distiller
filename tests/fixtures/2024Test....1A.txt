@@ -1,4 +1,5 @@
 Corresponding author: Ada Astronomer
 ada.old@example.edu
+notada.old@example.edu should not be counted as Ada's email.
 
 This fixture represents a calibration paper.

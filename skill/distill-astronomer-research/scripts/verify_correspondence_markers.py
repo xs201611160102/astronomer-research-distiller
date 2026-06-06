@@ -13,6 +13,11 @@ def context(text: str, match: re.Match[str], width: int = 220) -> str:
     return re.sub(r"\s+", " ", text[max(0, match.start() - width):match.end() + width]).strip()
 
 
+def email_regex(email: str) -> str:
+    marker = re.escape(email).replace(r"\@", r"\s*@\s*")
+    return rf"(?<![A-Z0-9._%+-]){marker}(?![A-Z0-9._%+-])"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=Path("config/astronomer.json"))
@@ -22,7 +27,7 @@ def main() -> None:
     args = parser.parse_args()
     config = json.loads(args.config.read_text(encoding="utf-8"))
     emails = config.get("emails", []) + config.get("legacy_emails", [])
-    email_pattern = re.compile("|".join(re.escape(email).replace(r"\@", r"\s*@\s*") for email in emails), re.I) if emails else None
+    email_pattern = re.compile("|".join(email_regex(email) for email in emails), re.I) if emails else None
     names = config.get("explicit_name_patterns") or [re.escape(name) for name in config.get("name_variants", [])]
     name_pattern = "(?:" + "|".join(names) + ")" if names else r".{0,80}"
     explicit_patterns = [
