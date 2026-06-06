@@ -176,10 +176,13 @@ assert cards[0]["lineage_stage"] == "Baseline"
 assert (project / "metadata/evidence-ledger.jsonl").exists()
 assert (project / "metadata/update-report.json").exists()
 corpus_audit = json.loads((project / "metadata/corpus_completeness_audit.json").read_text())
-assert corpus_audit["ads_raw_unique_bibcodes"] == 2
+assert corpus_audit["ads_raw_unique_bibcodes"] == 3
 assert corpus_audit["ads_identity_filtered_bibcodes"] == 1
 assert corpus_audit["audit_manifest_records"] == 2
 assert "No PDF download report found" in " ".join(corpus_audit["warnings"])
+excluded_conference = json.loads((project / "metadata/conference_records_excluded_from_audit.json").read_text())
+assert len(excluded_conference) == 1
+assert excluded_conference[0]["bibcode"] == "2021AAS...23700001A"
 download_report = json.loads((project / "metadata/download_fixture_report.json").read_text())
 assert download_report[0]["download_status"] == "downloaded"
 assert download_report[0]["attempts"][0]["kind"] == "fallback"

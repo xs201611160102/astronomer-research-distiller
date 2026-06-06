@@ -9,6 +9,14 @@ import json
 import re
 from pathlib import Path
 
+CONFERENCE_PUB_PATTERN = re.compile(
+    r"Meeting Abstracts|Bulletin of the American Astronomical Society|AAS/Division|"
+    r"IAU Symposium|EAS[0-9]|European Astronomical Society|TESS Science Conference|"
+    r"Machine Learning for Astrophysics|Early Disk-Galaxy Formation",
+    re.I,
+)
+CONFERENCE_BIBCODE_PATTERN = re.compile(r"^[0-9]{4}(BAAS|AAS)|IAUS|eas..conf|mla..conf|tsc3.conf|DDA", re.I)
+
 
 def normalize_title(value: str) -> str:
     value = html.unescape(value or "")
@@ -42,6 +50,13 @@ def load_records(path: Path) -> list[dict]:
     return payload
 
 
+def is_conference_record(item: dict) -> bool:
+    return bool(
+        CONFERENCE_PUB_PATTERN.search(item.get("pub") or "")
+        or CONFERENCE_BIBCODE_PATTERN.search(item.get("bibcode") or "")
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -56,7 +71,18 @@ def main() -> None:
         type=Path,
         default=Path("metadata/correspondence_audit_manifest.json"),
     )
+    parser.add_argument(
+        "--excluded-output",
+        type=Path,
+        default=None,
+    )
+    parser.add_argument(
+        "--include-conference-records",
+        action="store_true",
+        help="Include meeting abstracts and conference records in the PDF audit manifest.",
+    )
     args = parser.parse_args()
+    excluded_output = args.excluded_output or args.output.parent / "conference_records_excluded_from_audit.json"
 
     libraries = args.library or [Path("metadata/ads_official_library.json")]
     by_bibcode: dict[str, dict] = {}
@@ -71,6 +97,9 @@ def main() -> None:
                     "bibcode": bibcode,
                     "title": normalize_title(item.get("title", "")),
                     "authors_display": item.get("authors_display", ""),
+                    "year": item.get("year"),
+                    "pub": item.get("pub", ""),
+                    "doctype": item.get("doctype", ""),
                     "links": [],
                     "identifier": [],
                     "source_files": [],
@@ -80,31 +109,43 @@ def main() -> None:
                 existing["title"] = normalize_title(item.get("title", ""))
             if not existing["authors_display"] and item.get("authors_display"):
                 existing["authors_display"] = item.get("authors_display", "")
+            if not existing.get("year") and item.get("year"):
+                existing["year"] = item.get("year")
+            if not existing.get("pub") and item.get("pub"):
+                existing["pub"] = item.get("pub", "")
+            if not existing.get("doctype") and item.get("doctype"):
+                existing["doctype"] = item.get("doctype", "")
             existing["links"].extend(item.get("links", []))
             existing["identifier"].extend(item.get("identifier", []) or [])
             existing["source_files"].append(str(library_path))
 
     records = []
+    excluded = []
     for item in sorted(by_bibcode.values(), key=lambda record: record["bibcode"], reverse=True):
         source_files = sorted(set(item["source_files"]))
         pdf_links = sorted(set(arxiv_pdf_links(item.get("identifier", [])) + choose_pdf_links(item.get("links", []))))
-        records.append(
-            {
-                "bibcode": item["bibcode"],
-                "title": item["title"],
-                "authors_display": item["authors_display"],
-                "roles": ["ads_corpus_audit_candidate"],
-                "role_evidence": [f"record included in {source}" for source in source_files],
-                "pdf_links": pdf_links,
-                "distillation_tier": "audit",
-            }
-        )
+        record = {
+            "bibcode": item["bibcode"],
+            "title": item["title"],
+            "authors_display": item["authors_display"],
+            "roles": ["ads_corpus_audit_candidate"],
+            "role_evidence": [f"record included in {source}" for source in source_files],
+            "pdf_links": pdf_links,
+            "distillation_tier": "audit",
+        }
+        if is_conference_record(item) and not args.include_conference_records:
+            excluded.append({**record, "exclusion_reason": "conference_or_meeting_record"})
+        else:
+            records.append(record)
     args.output.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    excluded_output.parent.mkdir(parents=True, exist_ok=True)
+    excluded_output.write_text(json.dumps(excluded, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(
         json.dumps(
             {
                 "source_files": [str(path) for path in libraries],
                 "records": len(records),
+                "conference_records_excluded": len(excluded),
                 "with_pdf_links": sum(bool(item["pdf_links"]) for item in records),
             },
             indent=2,

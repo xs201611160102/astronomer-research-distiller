@@ -49,6 +49,7 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 17. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；下载过程应输出逐条进度，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
 18. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
 19. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
+20. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。
 
 ## 校验
 
@@ -106,6 +107,7 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 18. The PDF downloader must try arXiv PDFs exposed by ADS identifiers before ADS gateway and configured fallback links, print per-record progress, and use gateway, per-record, and max-attempt controls so refused or slow publisher links do not stall the corpus.
 19. Corresponding-author auditing is required after text extraction. `verify_correspondence_markers.py` keeps explicit corresponding-author wording separate from PDF email markers; known current or historical emails should also drive ADS full-text searches for candidate recall, but final roles still follow the evidence policy.
 20. ADS API collection appends `database:astronomy` by default to reduce same-name pollution from physics/general records. Use `--database all` only for spillover audits or important cross-database target publications.
+21. Meeting abstracts, conference records, and symposium proceedings are excluded from PDF download audits by default. `build_ads_audit_manifest.py` writes them to `metadata/conference_records_excluded_from_audit.json`; include them only with an explicit `--include-conference-records` request.
 
 ## Validation
 

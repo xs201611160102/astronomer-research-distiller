@@ -64,6 +64,11 @@ The scripts tolerate missing `first_author`, but require `bibcode`, `title`, and
 Pass every collected normalized ADS source to `build_ads_audit_manifest.py` with
 repeated `--library` arguments. The script de-duplicates by bibcode and preserves
 source provenance in `role_evidence`.
+Meeting abstracts, conference records, and symposium proceedings are excluded
+from the PDF audit manifest by default and saved separately as
+`metadata/conference_records_excluded_from_audit.json`. Treat them as provenance
+or supplemental leads, not as download targets, unless the user explicitly
+requests `--include-conference-records`.
 
 The audit manifest includes arXiv PDF URLs when ADS identifiers contain arXiv
 IDs. `download_public_pdfs.py` orders links arXiv-first, then ADS EPRINT gateway,

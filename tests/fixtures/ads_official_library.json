@@ -9,6 +9,14 @@
     "bibcode": "2022Test....2C",
     "title": "A Test Collaboration Paper",
     "authors_display": "Collaborator, B.; Astronomer, Ada",
+    "pub": "The Astrophysical Journal",
+    "links": []
+  },
+  {
+    "bibcode": "2021AAS...23700001A",
+    "title": "A Test Meeting Abstract",
+    "authors_display": "Astronomer, Ada",
+    "pub": "American Astronomical Society Meeting Abstracts #237",
     "links": []
   }
 ]

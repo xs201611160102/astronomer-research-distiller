@@ -120,7 +120,7 @@ python3 /path/to/skill/scripts/verify_correspondence_markers.py
 python3 /path/to/skill/scripts/audit_corpus_completeness.py
 ```
 
-The download step is for every publicly accessible PDF in
+The download step is for every publicly accessible non-conference PDF in
 `metadata/correspondence_audit_manifest.json`, not only the papers that look
 lineage-defining. Use representative subsets only later, during deep reading.
 If some records are unavailable, keep the download report and completeness audit
@@ -128,6 +128,13 @@ as the provenance. The downloader reports progress as records complete, tries
 arXiv PDF links before ADS gateway and publisher links when ADS identifiers expose
 an arXiv ID, and uses short gateway/record timeouts so refused or slow publisher
 links do not block the whole corpus.
+
+Meeting abstracts, conference records, and symposium proceedings are excluded
+from the PDF audit manifest by default and written to
+`metadata/conference_records_excluded_from_audit.json`. They are usually superseded
+by later papers and should not consume download or correspondence-audit effort.
+Only pass `--include-conference-records` when the user explicitly requests a
+conference-proceedings audit.
 
 Corresponding-author review is required, not optional. After text extraction,
 `verify_correspondence_markers.py` scans the audit corpus for explicit
