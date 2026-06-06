@@ -15,6 +15,7 @@ from pathlib import Path
 
 API_URL = "https://api.adsabs.harvard.edu/v1/search/query"
 FIELDS = "bibcode,title,author,links_data,year,pub,doctype,identifier,aff"
+DATABASES = ("astronomy", "physics", "general", "all")
 
 
 def keychain_token(service: str, account: str | None) -> str:
@@ -35,6 +36,12 @@ def get_token(args: argparse.Namespace) -> str:
         or os.environ.get("ADS_TOKEN")
         or keychain_token(args.keychain_service, args.keychain_account)
     )
+
+
+def scoped_query(query: str, database: str) -> str:
+    if database == "all" or "database:" in query.casefold():
+        return query
+    return f"({query}) database:{database}"
 
 
 def fetch_page(token: str, query: str, start: int, rows: int, sort: str) -> dict:
@@ -93,6 +100,12 @@ def main() -> None:
     parser.add_argument("--max-records", type=int, default=1000)
     parser.add_argument("--sort", default="date desc")
     parser.add_argument("--delay", type=float, default=0.2)
+    parser.add_argument(
+        "--database",
+        choices=DATABASES,
+        default="astronomy",
+        help="ADS database scope to append to the query. Use 'all' to leave the query unscoped.",
+    )
     parser.add_argument("--keychain-service", default="ads-api-token")
     parser.add_argument("--keychain-account", default=os.environ.get("USER", ""))
     args = parser.parse_args()
@@ -101,11 +114,12 @@ def main() -> None:
     if not token:
         raise SystemExit("No ADS token found. Run check_ads_access.py and add ADS token first.")
 
+    query = scoped_query(args.query, args.database)
     records = []
     start = 0
     num_found = None
     while len(records) < args.max_records:
-        payload = fetch_page(token, args.query, start, min(args.rows, args.max_records - len(records)), args.sort)
+        payload = fetch_page(token, query, start, min(args.rows, args.max_records - len(records)), args.sort)
         response = payload.get("response", {})
         num_found = response.get("numFound", 0)
         docs = response.get("docs", [])
@@ -119,7 +133,20 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"query": args.query, "numFound": num_found, "written": len(records), "output": str(args.output)}, indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                "query": query,
+                "requested_query": args.query,
+                "database": args.database,
+                "numFound": num_found,
+                "written": len(records),
+                "output": str(args.output),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+    )
 
 
 if __name__ == "__main__":

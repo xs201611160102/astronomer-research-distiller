@@ -5,7 +5,7 @@
 ## 交付物
 
 - `skill/distill-astronomer-research/`：可安装的通用 skill。
-- `scripts/` 逻辑位于 skill 内：初始化项目、自动写入多分支评估模板、ADS API 记录收集、同名作者身份过滤、ADS 全文审计、带进度和长尾控制的公开 PDF 下载、文本提取、通讯作者证据扫描、正式 manifest 生成、论文索引生成、方法谱系引用校验、有界引用邻域构建和滚动时间回测模板生成。
+- `scripts/` 逻辑位于 skill 内：初始化项目、自动写入多分支评估模板、默认限制到 ADS astronomy database 的 ADS API 记录收集、同名作者身份过滤、ADS 全文审计、带进度和长尾控制的公开 PDF 下载、文本提取、通讯作者证据扫描、正式 manifest 生成、论文索引生成、方法谱系引用校验、有界引用邻域构建和滚动时间回测模板生成。
 - `assets/astronomer-config.example.json`：每位天文学家的配置模板。
 
 ## 安装
@@ -48,6 +48,7 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 16. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
 17. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；下载过程应输出逐条进度，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
 18. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
+19. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
 
 ## 校验
 
@@ -60,7 +61,7 @@ This repository packages an ADS-first workflow for collecting an astronomer's pa
 ## Deliverables
 
 - `skill/distill-astronomer-research/`: the installable general-purpose skill.
-- Scripts inside the skill: project initialization, branch-aware review templates, ADS API record collection, same-name identity filtering, ADS audit manifests, public PDF download with progress and long-tail controls, text extraction, corresponding-author evidence scans, formal manifest generation, paper-index generation, method-lineage reference validation, bounded citation-neighborhood construction, and rolling holdout templates.
+- Scripts inside the skill: project initialization, branch-aware review templates, ADS API record collection scoped to the ADS astronomy database by default, same-name identity filtering, ADS audit manifests, public PDF download with progress and long-tail controls, text extraction, corresponding-author evidence scans, formal manifest generation, paper-index generation, method-lineage reference validation, bounded citation-neighborhood construction, and rolling holdout templates.
 - `assets/astronomer-config.example.json`: a configuration template for each target astronomer.
 
 ## Installation
@@ -104,6 +105,7 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 17. Run `check_ads_access.py` before ADS collection. If `ADS_DEV_KEY`, `ADS_TOKEN`, or keychain service `ads-api-token` is missing, ask the user to provide an ADS token and label any fallback corpus as incomplete.
 18. The PDF downloader must try arXiv PDFs exposed by ADS identifiers before ADS gateway and configured fallback links, print per-record progress, and use gateway, per-record, and max-attempt controls so refused or slow publisher links do not stall the corpus.
 19. Corresponding-author auditing is required after text extraction. `verify_correspondence_markers.py` keeps explicit corresponding-author wording separate from PDF email markers; known current or historical emails should also drive ADS full-text searches for candidate recall, but final roles still follow the evidence policy.
+20. ADS API collection appends `database:astronomy` by default to reduce same-name pollution from physics/general records. Use `--database all` only for spillover audits or important cross-database target publications.
 
 ## Validation
 

@@ -23,6 +23,11 @@ Completeness rule: collect enough ADS sources to cover the identity broadly befo
 distillation. At minimum, merge the official ADS library when available with ADS
 author search and first-author search results. The correspondence/email searches
 are role-evidence searches, not complete bibliography searches.
+`collect_ads_records.py` defaults to `--database astronomy`, which appends
+`database:astronomy` to API queries unless the query already contains an explicit
+`database:` term. Use `--database all` only when auditing same-name spillover or
+when the target has important cross-disciplinary publications that ADS classifies
+outside the astronomy database.
 When current or historical email addresses are known, run ADS full-text searches
 for those markers and feed the resulting JSON through the same identity filter.
 Those records help recover possible corresponding-author evidence, but final role

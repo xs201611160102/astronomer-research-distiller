@@ -48,6 +48,10 @@ Also save:
 - `metadata/ads_correspondence_search_legacy_email.json`, when applicable
 
 Use [ads-collection.md](ads-collection.md) for the expected JSON shape.
+The collection script defaults to `--database astronomy`, so routine astronomer
+queries exclude ADS physics/general spillover before identity filtering. Use
+`--database all` only for explicit spillover audits or genuinely cross-database
+publication sets.
 
 Do not stop after finding several representative papers. The collection target is
 the broad ADS corpus for the identity, with same-name rejects documented separately.
