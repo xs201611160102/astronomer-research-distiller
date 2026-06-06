@@ -5,7 +5,7 @@
 ## 交付物
 
 - `skill/distill-astronomer-research/`：可安装的通用 skill。
-- `scripts/` 逻辑位于 skill 内：初始化项目、自动写入多分支评估模板、ADS API 记录收集、同名作者身份过滤、ADS 全文审计、公开 PDF 下载、文本提取、通讯作者证据扫描、正式 manifest 生成、论文索引生成、方法谱系引用校验、有界引用邻域构建和滚动时间回测模板生成。
+- `scripts/` 逻辑位于 skill 内：初始化项目、自动写入多分支评估模板、ADS API 记录收集、同名作者身份过滤、ADS 全文审计、带进度和长尾控制的公开 PDF 下载、文本提取、通讯作者证据扫描、正式 manifest 生成、论文索引生成、方法谱系引用校验、有界引用邻域构建和滚动时间回测模板生成。
 - `assets/astronomer-config.example.json`：每位天文学家的配置模板。
 
 ## 安装
@@ -46,6 +46,8 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
 15. 每个生成型 skill 必须携带 `references/branch-evaluation-protocol.md`，使用统一覆盖矩阵和分支级报告模板，使不同天文学家的论文审查可复现、可比较。
 16. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
+17. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；下载过程应输出逐条进度，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
+18. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
 
 ## 校验
 
@@ -58,7 +60,7 @@ This repository packages an ADS-first workflow for collecting an astronomer's pa
 ## Deliverables
 
 - `skill/distill-astronomer-research/`: the installable general-purpose skill.
-- Scripts inside the skill: project initialization, branch-aware review templates, ADS API record collection, same-name identity filtering, ADS audit manifests, public PDF download, text extraction, corresponding-author evidence scans, formal manifest generation, paper-index generation, method-lineage reference validation, bounded citation-neighborhood construction, and rolling holdout templates.
+- Scripts inside the skill: project initialization, branch-aware review templates, ADS API record collection, same-name identity filtering, ADS audit manifests, public PDF download with progress and long-tail controls, text extraction, corresponding-author evidence scans, formal manifest generation, paper-index generation, method-lineage reference validation, bounded citation-neighborhood construction, and rolling holdout templates.
 - `assets/astronomer-config.example.json`: a configuration template for each target astronomer.
 
 ## Installation
@@ -100,6 +102,8 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 15. Every generated skill must include `references/branch-evaluation-protocol.md`, using a shared coverage matrix and branch-level report template so reviews of different astronomers remain reproducible and comparable.
 16. Corpus collection must first use the `identity_filter` config and `filter_ads_identity_candidates.py` to split raw ADS searches into target-author records and same-name rejects, then merge the filtered ADS source and attempt to download every publicly accessible PDF. Representative papers are only for later deep reading and method-lineage synthesis; they cannot replace full-corpus download. Run `audit_corpus_completeness.py` to record ADS, download, text-extraction, and formal-manifest counts.
 17. Run `check_ads_access.py` before ADS collection. If `ADS_DEV_KEY`, `ADS_TOKEN`, or keychain service `ads-api-token` is missing, ask the user to provide an ADS token and label any fallback corpus as incomplete.
+18. The PDF downloader must try arXiv PDFs exposed by ADS identifiers before ADS gateway and configured fallback links, print per-record progress, and use gateway, per-record, and max-attempt controls so refused or slow publisher links do not stall the corpus.
+19. Corresponding-author auditing is required after text extraction. `verify_correspondence_markers.py` keeps explicit corresponding-author wording separate from PDF email markers; known current or historical emails should also drive ADS full-text searches for candidate recall, but final roles still follow the evidence policy.
 
 ## Validation
 

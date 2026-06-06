@@ -88,6 +88,9 @@ python3 /path/to/skill/scripts/filter_ads_identity_candidates.py \
 
 Treat this as a reproducible same-name audit. The accepted file feeds the full
 PDF audit; the rejected file documents false positives and ambiguous records.
+When current or historical email-marker ADS searches exist, pass those JSON files
+as additional `--input` arguments to the same filtering command before building
+the audit manifest.
 
 ## 4. Audit Full Text
 
@@ -99,7 +102,12 @@ python3 /path/to/skill/scripts/build_ads_audit_manifest.py \
 python3 /path/to/skill/scripts/download_public_pdfs.py \
   --manifest metadata/correspondence_audit_manifest.json \
   --papers-dir correspondence_audit/papers \
-  --report metadata/correspondence_audit_download_report.json
+  --report metadata/correspondence_audit_download_report.json \
+  --workers 6 \
+  --max-time 45 \
+  --gateway-max-time 15 \
+  --record-timeout 90 \
+  --max-attempts-per-record 3
 python3 /path/to/skill/scripts/extract_pdf_texts.py \
   --papers-dir correspondence_audit/papers \
   --text-dir correspondence_audit/text \
@@ -112,7 +120,17 @@ The download step is for every publicly accessible PDF in
 `metadata/correspondence_audit_manifest.json`, not only the papers that look
 lineage-defining. Use representative subsets only later, during deep reading.
 If some records are unavailable, keep the download report and completeness audit
-as the provenance.
+as the provenance. The downloader reports progress as records complete, tries
+arXiv PDF links before ADS gateway and publisher links when ADS identifiers expose
+an arXiv ID, and uses short gateway/record timeouts so refused or slow publisher
+links do not block the whole corpus.
+
+Corresponding-author review is required, not optional. After text extraction,
+`verify_correspondence_markers.py` scans the audit corpus for explicit
+corresponding-author wording and configured current or historical email markers.
+Keep these evidence levels separate: explicit wording can promote
+`explicit_corresponding_author`; first-page or PDF email hits remain
+`pdf_email_marker` until manually reviewed.
 
 ## 5. Build Formal Manifest
 

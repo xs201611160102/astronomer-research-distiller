@@ -41,6 +41,38 @@ python3 "$skill_dir/scripts/filter_ads_identity_candidates.py" \
 python3 "$skill_dir/scripts/build_ads_audit_manifest.py" \
   --library "$project_dir/metadata/ads_official_library.json" \
   --output "$project_dir/metadata/correspondence_audit_manifest.json"
+python3 - "$project_dir" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+pdf = project / "fixture.pdf"
+pdf.write_bytes(b"%PDF-1.4\n" + b"0" * 1200)
+manifest = [
+    {
+        "bibcode": "2024Download.1A",
+        "title": "Download fixture",
+        "authors_display": "Astronomer, Ada",
+        "roles": ["ads_corpus_audit_candidate"],
+        "role_evidence": ["local fixture"],
+        "pdf_links": [pdf.resolve().as_uri()],
+        "distillation_tier": "audit",
+    }
+]
+(project / "metadata/download_fixture_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+PY
+python3 "$skill_dir/scripts/download_public_pdfs.py" \
+  --manifest "$project_dir/metadata/download_fixture_manifest.json" \
+  --papers-dir "$project_dir/download_fixture_papers" \
+  --report "$project_dir/metadata/download_fixture_report.json" \
+  --config "$project_dir/config/astronomer.json" \
+  --workers 1 \
+  --max-time 5 \
+  --gateway-max-time 2 \
+  --record-timeout 10 \
+  --max-attempts-per-record 1 \
+  --progress-every 1
 python3 "$skill_dir/scripts/audit_corpus_completeness.py" \
   --project-dir "$project_dir" \
   --output-json "$project_dir/metadata/corpus_completeness_audit.json" \
@@ -148,6 +180,10 @@ assert corpus_audit["ads_raw_unique_bibcodes"] == 2
 assert corpus_audit["ads_identity_filtered_bibcodes"] == 1
 assert corpus_audit["audit_manifest_records"] == 2
 assert "No PDF download report found" in " ".join(corpus_audit["warnings"])
+download_report = json.loads((project / "metadata/download_fixture_report.json").read_text())
+assert download_report[0]["download_status"] == "downloaded"
+assert download_report[0]["attempts"][0]["kind"] == "fallback"
+assert (project / "download_fixture_papers/2024Download.1A.pdf").exists()
 rolling = (project / "skill/ada-astronomer-research/references/rolling-holdout-evaluation.md").read_text()
 assert "Cutoff 2023" in rolling
 assert "2024Test....1A" in rolling

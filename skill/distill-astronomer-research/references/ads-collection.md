@@ -23,6 +23,10 @@ Completeness rule: collect enough ADS sources to cover the identity broadly befo
 distillation. At minimum, merge the official ADS library when available with ADS
 author search and first-author search results. The correspondence/email searches
 are role-evidence searches, not complete bibliography searches.
+When current or historical email addresses are known, run ADS full-text searches
+for those markers and feed the resulting JSON through the same identity filter.
+Those records help recover possible corresponding-author evidence, but final role
+promotion still depends on PDF text verification or publisher-page wording.
 
 Local cross-seeds from already distilled astronomer projects or installed skills
 are allowed as supplemental discovery aids. They must be produced by
@@ -55,6 +59,12 @@ The scripts tolerate missing `first_author`, but require `bibcode`, `title`, and
 Pass every collected normalized ADS source to `build_ads_audit_manifest.py` with
 repeated `--library` arguments. The script de-duplicates by bibcode and preserves
 source provenance in `role_evidence`.
+
+The audit manifest includes arXiv PDF URLs when ADS identifiers contain arXiv
+IDs. `download_public_pdfs.py` orders links arXiv-first, then ADS EPRINT gateway,
+then configured fallback and publisher-style links. Its progress output and
+gateway/record timeouts are part of the corpus audit: preserve the download
+report even when some URLs are refused or skipped as long-tail failures.
 
 ## Identity Checks
 
