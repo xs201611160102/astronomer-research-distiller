@@ -52,6 +52,7 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 20. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。arXiv 预印本若在 metadata 或全文中显示 proceedings 语境，`build_formal_manifest.py` 会以 `record_flags` 标记并默认降为 supplemental。
 21. PDF 文本抽取应传入 `--manifest metadata/correspondence_audit_manifest.json`，只抽取当前 audit manifest 内的 PDF，避免旧下载、会议记录或其他目录残留污染 completeness audit。
 22. 下载、文本抽取和通讯作者扫描报告使用统一 `{summary, records}` JSON 结构；读取脚本同时兼容旧的顶层数组报告。
+23. Rolling holdout 生成必须显式使用 `--cutoffs 2017,2019,...` 或重复 `--cutoff YEAR`；脚本禁用 argparse 缩写，避免 `--cutoff` 被误读成 `--cutoffs` 并静默覆盖。
 
 ## 校验
 
@@ -112,6 +113,7 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 21. Meeting abstracts, conference records, and symposium proceedings are excluded from PDF download audits by default. `build_ads_audit_manifest.py` writes them to `metadata/conference_records_excluded_from_audit.json`; include them only with an explicit `--include-conference-records` request. If an arXiv eprint carries proceedings context in metadata or extracted text, `build_formal_manifest.py` marks it with `record_flags` and tiers it as supplemental by default.
 22. PDF text extraction should pass `--manifest metadata/correspondence_audit_manifest.json` so only PDFs in the active audit manifest are extracted; this keeps stale downloads, conference records, and other directory leftovers out of completeness audits.
 23. Download, text-extraction, and correspondence reports use a common `{summary, records}` JSON shape. Readers remain backward-compatible with older top-level array reports.
+24. Rolling holdout generation requires explicit `--cutoffs 2017,2019,...` or repeated `--cutoff YEAR`; argparse abbreviation is disabled so misspelled cutoff options fail instead of silently changing the split set.
 
 ## Validation
 

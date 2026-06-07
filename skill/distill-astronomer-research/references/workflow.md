@@ -185,6 +185,7 @@ python3 /path/to/skill/scripts/build_method_graph.py \
   --lineage skill/<author-skill>/references/method-lineage.md \
   --markdown-output skill/<author-skill>/references/method-graph.md
 python3 /path/to/skill/scripts/generate_rolling_holdout.py \
+  --cutoffs 2017,2019,2022,2024 \
   --output skill/<author-skill>/references/rolling-holdout-evaluation.md
 python3 /path/to/skill/scripts/render_deep_cards.py \
   --cards distillation/deep-paper-cards.json \
@@ -229,7 +230,9 @@ Complete `references/holdout-review.md` after comparing the provisional lineage
 with held-out later papers. Review `metadata/external-comparison-candidates.json`
 and keep a curated method-level subset in `references/external-comparison-set.md`.
 Complete `references/rolling-holdout-review.md` for multiple cutoff years when
-the corpus spans enough time. Treat graph edge semantics as heuristic unless
+the corpus spans enough time. Use either comma-separated `--cutoffs` or repeated
+`--cutoff YEAR`; abbreviated option names are intentionally disabled so typos
+fail loudly. Treat graph edge semantics as heuristic unless
 manually checked or overridden in project configuration.
 Keep full-text deep cards separate from generated skeletons so that refreshes do
 not overwrite manual reading. Ask the user only about citation-context ambiguity
