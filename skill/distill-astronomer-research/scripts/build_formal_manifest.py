@@ -37,14 +37,18 @@ def main() -> None:
         item = audit[bibcode]
         evidence = verification.get(bibcode, {}).get("evidence", [])
         roles = []
+        role_evidence = []
         if bibcode in first_authors:
             roles.append("first_author_verified")
+            role_evidence.append("ADS identity audit")
         if any(ev["kind"] == "explicit_corresponding_author" for ev in evidence):
             roles.append("explicit_corresponding_author")
+            role_evidence.append("local PDF text explicit corresponding-author verification")
         if any(ev["kind"] == "pdf_email_marker" for ev in evidence):
             roles.append("pdf_email_marker")
+            role_evidence.append("local PDF text email-marker verification")
         supplemental = any(token in bibcode for token in config.get("supplemental_bibcode_tokens", []))
-        records.append({**item, "roles": roles, "role_evidence": ["ADS identity audit", "local PDF text verification"], "distillation_tier": "supplemental" if supplemental else "core"})
+        records.append({**item, "roles": roles, "role_evidence": role_evidence, "distillation_tier": "supplemental" if supplemental else "core"})
         for source_dir, target_dir, suffix in ((args.audit_papers_dir, args.papers_dir, ".pdf"), (args.audit_text_dir, args.text_dir, ".txt")):
             source = source_dir / f"{bibcode}{suffix}"
             target = target_dir / source.name
