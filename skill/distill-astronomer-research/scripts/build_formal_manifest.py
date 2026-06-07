@@ -65,16 +65,29 @@ def main() -> None:
     parser.add_argument("--audit-text-dir", type=Path, default=Path("correspondence_audit/text"))
     parser.add_argument("--papers-dir", type=Path, default=Path("papers"))
     parser.add_argument("--text-dir", type=Path, default=Path("text"))
+    parser.add_argument("--missing-selected-output", type=Path, default=Path("metadata/formal_manifest_missing_selected.json"))
+    parser.add_argument(
+        "--fail-on-missing-selected",
+        action="store_true",
+        help="Fail if verified first-author or correspondence-evidence bibcodes are absent from the audit manifest.",
+    )
     args = parser.parse_args()
     config = load_json(args.config)
     audit = {item["bibcode"]: item for item in load_records(args.audit_manifest)}
     verification = {item["bibcode"]: item for item in load_records(args.verification)}
     first_authors = {line.strip() for line in args.first_author_bibcodes.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")}
     selected = first_authors | {bibcode for bibcode, item in verification.items() if item["status"] == "pdf_text_evidence_found"}
+    missing_selected = []
     records = []
     for bibcode in sorted(selected, reverse=True):
         if bibcode not in audit:
-            raise SystemExit(f"Verified bibcode missing from ADS audit manifest: {bibcode}")
+            missing_selected.append({
+                "bibcode": bibcode,
+                "selected_as_first_author": bibcode in first_authors,
+                "selected_from_pdf_evidence": verification.get(bibcode, {}).get("status") == "pdf_text_evidence_found",
+                "reason": "selected bibcode absent from audit manifest; often caused by conference/proceedings exclusion",
+            })
+            continue
         item = audit[bibcode]
         evidence = verification.get(bibcode, {}).get("evidence", [])
         roles = []
@@ -100,16 +113,24 @@ def main() -> None:
             if source.exists() and not target.exists():
                 target_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
+    args.missing_selected_output.parent.mkdir(parents=True, exist_ok=True)
+    args.missing_selected_output.write_text(
+        json.dumps(missing_selected, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
     args.output.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({
         "formal_manifest_records": len(records),
         "first_author_verified": len(first_authors),
+        "missing_selected": len(missing_selected),
         "pdf_evidence_records": sum("pdf_email_marker" in item["roles"] or "explicit_corresponding_author" in item["roles"] for item in records),
         "distillation_tier_counts": {
             "core": sum(item["distillation_tier"] == "core" for item in records),
             "supplemental": sum(item["distillation_tier"] == "supplemental" for item in records),
         },
     }, indent=2))
+    if args.fail_on_missing_selected and missing_selected:
+        raise SystemExit(f"{len(missing_selected)} selected bibcodes were absent from the audit manifest")
 
 
 if __name__ == "__main__":
