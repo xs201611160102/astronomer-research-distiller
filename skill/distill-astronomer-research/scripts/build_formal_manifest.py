@@ -36,6 +36,11 @@ def first_text(path: Path, limit: int = 80000) -> str:
     return path.read_text(encoding="utf-8", errors="replace")[:limit]
 
 
+def header_text(text: str, max_lines: int = 140, max_chars: int = 12000) -> str:
+    """Return the front-matter region where venue/proceedings labels usually appear."""
+    return "\n".join(text.splitlines()[:max_lines])[:max_chars]
+
+
 def classify_tier(item: dict, config: dict, text: str) -> tuple[str, list[str]]:
     haystack = " ".join(
         str(item.get(key, ""))
@@ -47,7 +52,7 @@ def classify_tier(item: dict, config: dict, text: str) -> tuple[str, list[str]]:
         flags.append("configured_supplemental_bibcode_token")
     if SUPPLEMENTAL_BIBCODE_PATTERN.search(item.get("bibcode", "")) or SUPPLEMENTAL_TEXT_PATTERN.search(haystack):
         flags.append("non_standard_publication_type")
-    if PROCEEDINGS_TEXT_PATTERN.search(haystack) or PROCEEDINGS_TEXT_PATTERN.search(text):
+    if PROCEEDINGS_TEXT_PATTERN.search(haystack) or PROCEEDINGS_TEXT_PATTERN.search(header_text(text)):
         flags.append("proceedings_context")
     flags = sorted(set(flags))
     tier = "supplemental" if flags else "core"
