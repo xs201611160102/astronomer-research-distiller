@@ -31,15 +31,21 @@ def format_paper(item: dict) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument("--manifest", type=Path, default=Path("metadata/paper_manifest.json"))
     parser.add_argument("--config", type=Path, default=Path("config/astronomer.json"))
     parser.add_argument("--cutoffs", help="Comma-separated cutoff years; overrides config")
+    parser.add_argument("--cutoff", action="append", default=[], help="Single cutoff year. May be repeated.")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     config = load_json(args.config, {}) or {}
-    cutoffs = parse_cutoffs(args.cutoffs) if args.cutoffs else config.get("rolling_holdout_cutoffs", [])
+    if args.cutoff:
+        cutoffs = [int(year) for year in args.cutoff]
+    elif args.cutoffs:
+        cutoffs = parse_cutoffs(args.cutoffs)
+    else:
+        cutoffs = config.get("rolling_holdout_cutoffs", [])
     cutoffs = sorted({int(year) for year in cutoffs})
     if not cutoffs:
         cutoffs = [int(config.get("holdout_cutoff_year", 2023))]
