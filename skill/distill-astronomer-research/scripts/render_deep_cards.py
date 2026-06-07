@@ -21,9 +21,15 @@ FIELDS = [
 
 def format_source_line(item) -> str:
     if isinstance(item, dict):
+        source = item.get("source")
         line = item.get("line")
         text = item.get("text", "")
-        prefix = f"Line {line}: " if line else ""
+        parts = []
+        if source:
+            parts.append(str(source))
+        if line:
+            parts.append(f"line {line}")
+        prefix = f"{', '.join(parts)}: " if parts else ""
         return f"- {prefix}{text}"
     return f"- {item}"
 

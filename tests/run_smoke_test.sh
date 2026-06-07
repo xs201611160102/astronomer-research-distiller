@@ -246,6 +246,7 @@ assert "2024Test....1A" in rolling
 deep_cards = (project / "skill/ada-astronomer-research/references/deep-paper-cards.md").read_text()
 assert "Can the fixture render a deep card?" in deep_cards
 assert "Card level: `deep`" in deep_cards
+assert "text/2024Test....1A.txt, line 1" in deep_cards
 assert "Fixture source line." in deep_cards
 contexts = json.loads((project / "metadata/core-citation-contexts.json").read_text())
 assert contexts[0]["hit_count"] == 1
