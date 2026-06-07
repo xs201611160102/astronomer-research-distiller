@@ -12,6 +12,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Optional
 
+from report_utils import load_records
+
 
 def load_json(path: Path, default=None):
     if not path.exists():
@@ -133,7 +135,7 @@ def main() -> None:
 
     config = load_json(args.config, {}) or {}
     manifest = load_json(args.manifest, []) or []
-    verification = {item["bibcode"]: item for item in load_json(args.verification, []) or []}
+    verification = {item["bibcode"]: item for item in load_records(args.verification)}
     author_limit = int(config.get("top_author_limit", 3))
     lineage = parse_lineage(args.lineage)
     target_keys = {author_key(token) for token in config.get("name_variants", [])}

@@ -8,6 +8,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from report_utils import count_by, load_records, write_report
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -24,7 +26,7 @@ def main() -> None:
     args.text_dir.mkdir(parents=True, exist_ok=True)
     allowed_bibcodes = None
     if args.manifest:
-        allowed_bibcodes = {item["bibcode"] for item in json.loads(args.manifest.read_text(encoding="utf-8"))}
+        allowed_bibcodes = {item["bibcode"] for item in load_records(args.manifest)}
     report = []
     for pdf in sorted(args.papers_dir.glob("*.pdf")):
         if allowed_bibcodes is not None and pdf.stem not in allowed_bibcodes:
@@ -33,8 +35,10 @@ def main() -> None:
         result = subprocess.run(["pdftotext", str(pdf), str(text)], capture_output=True, text=True)
         status = "extracted" if result.returncode == 0 and text.exists() else "failed"
         report.append({"bibcode": pdf.stem, "pdf": str(pdf), "text": str(text), "status": status, "error": result.stderr.strip()})
-    args.report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({"extracted": sum(item["status"] == "extracted" for item in report)}, indent=2))
+    counts = count_by(report, "status")
+    summary = {"total_records": len(report), "status_counts": counts, "extracted": counts.get("extracted", 0)}
+    write_report(args.report, report, summary)
+    print(json.dumps(summary, indent=2))
 
 
 if __name__ == "__main__":

@@ -8,6 +8,8 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from report_utils import load_records
+
 
 ADS_SOURCE_NAMES = [
     "ads_official_library.json",
@@ -62,7 +64,7 @@ def count_ads_sources(metadata: Path) -> tuple[dict[str, int], set[str], set[str
 
 
 def download_counts(report_path: Path) -> Counter:
-    report = load_json(report_path, []) or []
+    report = load_records(report_path)
     return Counter(item.get("download_status", "unknown") for item in report)
 
 

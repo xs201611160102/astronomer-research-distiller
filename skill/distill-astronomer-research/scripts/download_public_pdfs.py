@@ -12,9 +12,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlparse
 
-
-def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+from report_utils import count_by, load_json, load_records, write_report
 
 
 def is_pdf(path: Path) -> bool:
@@ -44,13 +42,16 @@ def ordered_links(pdf_links: list[str], fallback_links: list[str]) -> list[str]:
     return sorted(dict.fromkeys((pdf_links or []) + (fallback_links or [])), key=priority)
 
 
-def download(url: str, destination: Path, connect_timeout: int, max_time: int) -> tuple[bool, str]:
+def download(url: str, destination: Path, connect_timeout: int, max_time: int, resume: bool) -> tuple[bool, str]:
     temporary = destination.with_suffix(".part")
-    temporary.unlink(missing_ok=True)
+    if not resume:
+        temporary.unlink(missing_ok=True)
     command = [
         "curl", "-L", "--fail", "--silent", "--show-error",
         "--connect-timeout", str(connect_timeout),
     ]
+    if resume and temporary.exists() and temporary.stat().st_size > 0:
+        command.extend(["-C", "-"])
     if max_time > 0:
         command.extend(["--max-time", str(max_time)])
     command.extend(["-o", str(temporary), url])
@@ -85,6 +86,11 @@ def main() -> None:
     parser.add_argument("--record-timeout", type=int, default=90)
     parser.add_argument("--max-attempts-per-record", type=int, default=3)
     parser.add_argument("--progress-every", type=int, default=1)
+    parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Disable curl resume for existing .part files. By default downloads use curl -C - when possible.",
+    )
     args = parser.parse_args()
     fallbacks = load_json(args.config).get("pdf_fallbacks", {}) if args.config.exists() else {}
     args.papers_dir.mkdir(parents=True, exist_ok=True)
@@ -108,7 +114,7 @@ def main() -> None:
                 per_url_max_time = args.gateway_max_time if kind == "ads_gateway" else args.max_time
                 remaining = max(1, int(args.record_timeout - elapsed))
                 per_url_max_time = min(per_url_max_time, remaining)
-            ok, error = download(url, destination, args.connect_timeout, per_url_max_time)
+            ok, error = download(url, destination, args.connect_timeout, per_url_max_time, not args.no_resume)
             attempts.append({"url": url, "kind": kind, "error": error})
             if ok:
                 return {**item, "download_status": "downloaded", "file": str(destination), "attempts": attempts}
@@ -118,14 +124,15 @@ def main() -> None:
             result["skipped_link_count"] = skipped
         return result
 
-    manifest = load_json(args.manifest)
+    manifest = load_records(args.manifest)
     total = len(manifest)
     progress(
         "download_public_pdfs: "
         f"records={total} workers={args.workers} max_time={args.max_time}s "
         f"arxiv_max_time={'unlimited' if args.arxiv_max_time == 0 else str(args.arxiv_max_time) + 's'} "
         f"gateway_max_time={args.gateway_max_time}s record_timeout={args.record_timeout}s "
-        f"max_attempts_per_record={args.max_attempts_per_record}"
+        f"max_attempts_per_record={args.max_attempts_per_record} "
+        f"resume={'off' if args.no_resume else 'on'}"
     )
     report = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -142,11 +149,15 @@ def main() -> None:
                     f"counts={json.dumps(counts, sort_keys=True)}"
                 )
     report.sort(key=lambda item: item["bibcode"], reverse=True)
-    args.report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    counts = {}
-    for item in report:
-        counts[item["download_status"]] = counts.get(item["download_status"], 0) + 1
-    print(json.dumps(counts, indent=2, ensure_ascii=False))
+    counts = count_by(report, "download_status")
+    summary = {
+        "total_records": len(report),
+        "download_status_counts": counts,
+        "downloaded_or_existing_pdfs": sum(counts.get(status, 0) for status in ("downloaded", "existing")),
+        "resume_enabled": not args.no_resume,
+    }
+    write_report(args.report, report, summary)
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

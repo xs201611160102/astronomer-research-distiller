@@ -12,10 +12,12 @@ from pathlib import Path
 CONFERENCE_PUB_PATTERN = re.compile(
     r"Meeting Abstracts|Bulletin of the American Astronomical Society|AAS/Division|"
     r"IAU Symposium|EAS[0-9]|European Astronomical Society|TESS Science Conference|"
-    r"Machine Learning for Astrophysics|Early Disk-Galaxy Formation",
+    r"Machine Learning for Astrophysics|Early Disk-Galaxy Formation|"
+    r"Proceedings|Conference Series|ASP Conf|PMLR|International Conference",
     re.I,
 )
 CONFERENCE_BIBCODE_PATTERN = re.compile(r"^[0-9]{4}(BAAS|AAS)|IAUS|eas..conf|mla..conf|tsc3.conf|DDA", re.I)
+PROCEEDINGS_CONTEXT_PATTERN = re.compile(r"\b(proceedings|conference|symposium|PMLR)\b", re.I)
 
 
 def normalize_title(value: str) -> str:
@@ -131,11 +133,17 @@ def main() -> None:
             "bibcode": item["bibcode"],
             "title": item["title"],
             "authors_display": item["authors_display"],
+            "year": item.get("year"),
+            "pub": item.get("pub", ""),
+            "doctype": item.get("doctype", ""),
+            "identifier": sorted(set(item.get("identifier", []))),
             "roles": ["ads_corpus_audit_candidate"],
             "role_evidence": [f"record included in {source}" for source in source_files],
             "pdf_links": pdf_links,
             "distillation_tier": "audit",
         }
+        if PROCEEDINGS_CONTEXT_PATTERN.search(f"{item.get('pub', '')} {item.get('title', '')}"):
+            record["record_flags"] = ["metadata_proceedings_context"]
         if is_conference_record(item) and not args.include_conference_records:
             excluded.append({**record, "exclusion_reason": "conference_or_meeting_record"})
         else:

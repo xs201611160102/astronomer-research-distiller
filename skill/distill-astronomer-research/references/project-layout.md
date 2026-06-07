@@ -8,6 +8,8 @@
 ├── metadata/
 │   ├── ads_official_library.json
 │   ├── correspondence_audit_manifest.json
+│   ├── correspondence_audit_download_report.json
+│   ├── correspondence_audit_text_extract_report.json
 │   ├── corpus_completeness_audit.json
 │   ├── corpus_completeness_audit.md
 │   ├── correspondence_audit_verification.json
@@ -60,3 +62,8 @@ Keep audit downloads separate from formal evidence. The audit area should attemp
 to cover every publicly downloadable PDF in the merged ADS corpus. Only copy
 promoted records into `papers/` and `text/`, and clearly label that promoted set
 as a curated core when it is smaller than the audit corpus.
+
+Download, text-extraction, and correspondence reports use `{summary, records}`.
+The formal manifest may include `record_flags` and `distillation_tier:
+supplemental` for software, catalogs, theses, awards, reviews, and proceedings
+context records.

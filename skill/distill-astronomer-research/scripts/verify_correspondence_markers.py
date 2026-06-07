@@ -8,6 +8,8 @@ import json
 import re
 from pathlib import Path
 
+from report_utils import load_records, write_report
+
 
 def context(text: str, match: re.Match[str], width: int = 220) -> str:
     return re.sub(r"\s+", " ", text[max(0, match.start() - width):match.end() + width]).strip()
@@ -36,7 +38,7 @@ def main() -> None:
         re.compile(rf"通信作者.{{0,180}}{name_pattern}", re.I | re.S),
     ]
     report = []
-    for item in json.loads(args.manifest.read_text(encoding="utf-8")):
+    for item in load_records(args.manifest):
         text_path = args.text_dir / f"{item['bibcode']}.txt"
         evidence = []
         if text_path.exists():
@@ -50,13 +52,14 @@ def main() -> None:
                 if match:
                     evidence.append({"kind": "explicit_corresponding_author", "context": context(text, match)})
         report.append({"bibcode": item["bibcode"], "title": item["title"], "status": "pdf_text_evidence_found" if evidence else "manual_review_needed", "evidence": evidence})
-    args.report.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(json.dumps({
+    summary = {
         "candidates": len(report),
         "pdf_text_evidence_found": sum(item["status"] == "pdf_text_evidence_found" for item in report),
         "explicit_corresponding_author": sum(any(ev["kind"] == "explicit_corresponding_author" for ev in item["evidence"]) for item in report),
         "pdf_email_marker": sum(any(ev["kind"] == "pdf_email_marker" for ev in item["evidence"]) for item in report),
-    }, indent=2, ensure_ascii=False))
+    }
+    write_report(args.report, report, summary)
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

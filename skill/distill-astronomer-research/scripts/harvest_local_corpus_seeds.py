@@ -14,6 +14,7 @@ DEFAULT_PATTERNS = [
     "**/metadata/paper_manifest.json",
     "**/skill/*/references/corpus-records.json",
 ]
+STALE_NAME_PATTERN = re.compile(r"(backup|before_|_before_|with_conference|all_database|snapshot|local_corpus_seed)", re.I)
 
 
 def load_json(path: Path):
@@ -75,6 +76,19 @@ def candidate_files(root: Path, patterns: list[str]) -> list[Path]:
     return sorted(set(path for path in files if path.is_file()))
 
 
+def should_skip(path: Path, project: Path, include_current_project: bool, include_stale: bool) -> bool:
+    resolved = path.resolve()
+    if not include_current_project:
+        try:
+            resolved.relative_to(project)
+            return True
+        except ValueError:
+            pass
+    if not include_stale and STALE_NAME_PATTERN.search(resolved.name):
+        return True
+    return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-dir", type=Path, default=Path("."))
@@ -83,6 +97,8 @@ def main() -> None:
     parser.add_argument("--name-variant", action="append", default=[])
     parser.add_argument("--config", type=Path, default=Path("config/astronomer.json"))
     parser.add_argument("--output", type=Path, default=Path("metadata/local_corpus_seed_records.json"))
+    parser.add_argument("--include-current-project", action="store_true")
+    parser.add_argument("--include-stale-snapshots", action="store_true")
     args = parser.parse_args()
 
     project = args.project_dir.resolve()
@@ -103,6 +119,8 @@ def main() -> None:
         if not root.exists():
             continue
         for path in candidate_files(root, glob_patterns):
+            if should_skip(path, project, args.include_current_project, args.include_stale_snapshots):
+                continue
             records = records_from_json(path)
             if not records:
                 continue

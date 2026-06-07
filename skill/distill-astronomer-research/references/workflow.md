@@ -70,9 +70,11 @@ python3 /path/to/skill/scripts/harvest_local_corpus_seeds.py \
 
 This scans local JSON corpora such as `metadata/ads*.json`,
 `metadata/paper_manifest.json`, and future installed-skill `corpus-records.json`
-files for the configured name variants. Local cross-seeds are supplemental:
-use them to discover missing ADS records, not as a replacement for ADS author
-searches.
+files for the configured name variants. By default it skips the current project,
+backup/snapshot files, all-database spillover snapshots, and previous local seed
+files; pass `--include-current-project` or `--include-stale-snapshots` only for
+an explicit audit. Local cross-seeds are supplemental: use them to discover
+missing ADS records, not as a replacement for ADS author searches.
 
 Before building the download manifest, make the identity anchors explicit in
 `config/astronomer.json`: official/historical affiliations, full and initial-only
@@ -130,14 +132,18 @@ as the provenance. The downloader reports progress as records complete, tries
 arXiv PDF links before ADS gateway and publisher links when ADS identifiers expose
 an arXiv ID, leaves arXiv downloads without a total-time cap by default, and uses
 short gateway/record timeouts so refused or slow publisher links do not block the
-whole corpus.
+whole corpus. Existing `.part` files are resumed by default with `curl -C -`;
+use `--no-resume` only when a partial file is known to be corrupt.
 
 Meeting abstracts, conference records, and symposium proceedings are excluded
 from the PDF audit manifest by default and written to
 `metadata/conference_records_excluded_from_audit.json`. They are usually superseded
 by later papers and should not consume download or correspondence-audit effort.
 Only pass `--include-conference-records` when the user explicitly requests a
-conference-proceedings audit.
+conference-proceedings audit. ArXiv records can still carry proceedings context;
+after text extraction, `build_formal_manifest.py` scans metadata and local text
+for proceedings signals and adds `record_flags` such as `proceedings_context`,
+tiering those records as supplemental by default.
 
 Corresponding-author review is required, not optional. After text extraction,
 `verify_correspondence_markers.py` scans the audit corpus for explicit
@@ -160,6 +166,10 @@ The formal manifest can be smaller than the audit corpus when it contains only
 confirmed first-author and corresponding-author roles. If so, label it as a
 curated core or role-confirmed manifest in `README.md`, `source-policy.md`, and
 `paper-index.md`; do not call it the complete publication list.
+The manifest builder also assigns `distillation_tier` automatically. Software,
+catalog, thesis, award, review-like, configured supplemental bibcode tokens, and
+proceedings-context records are marked `supplemental` with `record_flags`; only
+unflagged records remain `core`.
 
 ## 6. Distill
 
@@ -207,6 +217,11 @@ Write:
 - `skill/<author-skill>/references/method-lineage.md`
 - `skill/<author-skill>/references/method-playbook.md`
 - `skill/<author-skill>/references/source-policy.md`
+
+If local OpenAlex helper records do not match lineage-paper titles, the graph
+builder now performs cached OpenAlex title search by default and writes matching
+diagnostics to `method-graph.md` and `metadata/method-graph.json`. Use
+`--no-title-search` for a strictly offline graph pass.
 
 Review and complete analytical fields in `distillation/paper-cards.json` for
 lineage-defining papers. Use `metadata/evidence-ledger.jsonl` for claim provenance.

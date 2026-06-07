@@ -46,6 +46,9 @@ import json
 import sys
 from pathlib import Path
 
+def report_records(payload):
+    return payload["records"] if isinstance(payload, dict) and "records" in payload else payload
+
 project = Path(sys.argv[1])
 pdf = project / "fixture.pdf"
 pdf.write_bytes(b"%PDF-1.4\n" + b"0" * 1200)
@@ -77,6 +80,9 @@ python3 - "$project_dir" <<'PY'
 import json
 import sys
 from pathlib import Path
+
+def report_records(payload):
+    return payload["records"] if isinstance(payload, dict) and "records" in payload else payload
 
 project = Path(sys.argv[1])
 papers = project / "extract_fixture_papers"
@@ -181,6 +187,9 @@ import json
 import sys
 from pathlib import Path
 
+def report_records(payload):
+    return payload["records"] if isinstance(payload, dict) and "records" in payload else payload
+
 project = Path(sys.argv[1])
 branch_protocol = project / "skill/ada-astronomer-research/references/branch-evaluation-protocol.md"
 assert branch_protocol.exists()
@@ -198,7 +207,9 @@ assert manifest[0]["roles"] == [
     "explicit_corresponding_author",
     "pdf_email_marker",
 ]
-verification = json.loads((project / "metadata/correspondence_audit_verification.json").read_text())
+verification_payload = json.loads((project / "metadata/correspondence_audit_verification.json").read_text())
+assert verification_payload["summary"]["pdf_text_evidence_found"] == 1
+verification = report_records(verification_payload)
 email_markers = [ev for item in verification for ev in item["evidence"] if ev["kind"] == "pdf_email_marker"]
 assert len(email_markers) == 1
 cards = json.loads((project / "distillation/paper-cards.json").read_text())
@@ -218,11 +229,16 @@ audit_manifest = json.loads((project / "metadata/correspondence_audit_manifest.j
 arxiv_fixture = next(item for item in audit_manifest if item["bibcode"] == "2025TestArxiv1A")
 assert "https://arxiv.org/pdf/2407.11194" in arxiv_fixture["pdf_links"]
 assert "https://arxiv.org/pdf/2024.10089" not in arxiv_fixture["pdf_links"]
-download_report = json.loads((project / "metadata/download_fixture_report.json").read_text())
+download_payload = json.loads((project / "metadata/download_fixture_report.json").read_text())
+assert download_payload["summary"]["download_status_counts"]["downloaded"] == 1
+assert download_payload["summary"]["resume_enabled"] is True
+download_report = report_records(download_payload)
 assert download_report[0]["download_status"] == "downloaded"
 assert download_report[0]["attempts"][0]["kind"] == "fallback"
 assert (project / "download_fixture_papers/2024Download.1A.pdf").exists()
-extract_report = json.loads((project / "metadata/extract_fixture_report.json").read_text())
+extract_payload = json.loads((project / "metadata/extract_fixture_report.json").read_text())
+assert extract_payload["summary"]["total_records"] == 1
+extract_report = report_records(extract_payload)
 assert [item["bibcode"] for item in extract_report] == ["2024Extract.1A"]
 rolling = (project / "skill/ada-astronomer-research/references/rolling-holdout-evaluation.md").read_text()
 assert "Cutoff 2023" in rolling

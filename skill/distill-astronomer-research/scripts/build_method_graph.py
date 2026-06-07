@@ -119,6 +119,42 @@ def fetch_citing(work_id: str, cache_dir: Path, per_page: int, delay: float) -> 
     return payload.get("results", [])
 
 
+def fetch_title_search(title: str, cache_dir: Path, per_page: int, delay: float) -> list[dict]:
+    normalized = normalize_title(title)
+    if not normalized:
+        return []
+    query = urllib.parse.urlencode({"search": title, "per-page": per_page})
+    payload = fetch_json(
+        f"https://api.openalex.org/works?{query}",
+        cache_dir / "title_search" / f"{normalized[:80]}.json",
+        delay,
+    )
+    return payload.get("results", [])
+
+
+def best_title_match(title: str, candidates: list[dict]) -> tuple[Optional[dict], str]:
+    target = normalize_title(title)
+    if not target:
+        return None, "no title"
+    for work in candidates:
+        if normalize_title(work.get("title", "")) == target:
+            return work, "exact_normalized_title"
+    target_words = set(re.findall(r"[a-z0-9]+", html.unescape(title or "").lower()))
+    best = None
+    best_score = 0.0
+    for work in candidates:
+        words = set(re.findall(r"[a-z0-9]+", html.unescape(work.get("title", "") or "").lower()))
+        if not words:
+            continue
+        score = len(target_words & words) / max(1, len(target_words | words))
+        if score > best_score:
+            best = work
+            best_score = score
+    if best and best_score >= 0.72:
+        return best, f"fuzzy_title_jaccard_{best_score:.2f}"
+    return None, "no confident title match"
+
+
 def summarize_work(work: dict) -> dict:
     return {
         "openalex_id": work.get("id", ""),
@@ -173,6 +209,12 @@ def main() -> None:
     parser.add_argument("--second-hop-per-neighbor", type=int, default=4)
     parser.add_argument("--second-hop-neighbor-limit", type=int, default=60)
     parser.add_argument("--comparison-limit", type=int, default=30)
+    parser.add_argument("--title-search-per-core", type=int, default=5)
+    parser.add_argument(
+        "--no-title-search",
+        action="store_true",
+        help="Disable OpenAlex title-search matching for lineage papers missing from the local OpenAlex file.",
+    )
     parser.add_argument("--delay", type=float, default=0.08)
     args = parser.parse_args()
 
@@ -186,13 +228,27 @@ def main() -> None:
     local_by_title = {normalize_title(work.get("title", "")): work for work in local_works}
     core_works = {}
     missing_core = []
+    match_basis = {}
     for bibcode in sorted(lineage):
         formal = next((item for item in manifest if item["bibcode"] == bibcode), None)
-        work = local_by_title.get(normalize_title(formal.get("title", "") if formal else ""))
+        title = formal.get("title", "") if formal else ""
+        work = local_by_title.get(normalize_title(title))
         if work:
             core_works[bibcode] = work
+            match_basis[bibcode] = "local_openalex_title"
         else:
-            missing_core.append(bibcode)
+            searched_work = None
+            basis = "not searched"
+            if formal and not args.no_title_search:
+                searched_work, basis = best_title_match(
+                    title,
+                    fetch_title_search(title, args.cache_dir, args.title_search_per_core, args.delay),
+                )
+            if searched_work:
+                core_works[bibcode] = searched_work
+                match_basis[bibcode] = basis
+            else:
+                missing_core.append({"bibcode": bibcode, "title": title, "reason": basis})
 
     nodes: dict[str, dict] = {}
     raw_edges = set()
@@ -297,6 +353,7 @@ def main() -> None:
             "lineage_bibcodes": len(lineage),
             "openalex_matched_lineage_bibcodes": len(core_works),
             "missing_lineage_bibcodes": missing_core,
+            "lineage_match_basis": match_basis,
             "upstream_per_core": args.upstream_per_core,
             "citing_per_core": args.citing_per_core,
             "second_hop_per_neighbor": args.second_hop_per_neighbor,
@@ -317,6 +374,7 @@ def main() -> None:
         "This graph is bounded around lineage-defining papers. Semantic edge labels are heuristic unless explicitly overridden in project configuration.\n\n"
         f"- Lineage papers: {len(lineage)}\n"
         f"- OpenAlex-matched lineage papers: {len(core_works)}\n"
+        f"- Missing lineage papers: {len(missing_core)}\n"
         f"- Graph nodes: {len(nodes)}\n"
         f"- Graph edges: {len(semantic_edges)}\n"
         f"- External comparison candidates: {len(candidates)}\n\n"
@@ -325,7 +383,16 @@ def main() -> None:
         f"- Second-hop neighbors expanded: at most {args.second_hop_neighbor_limit}\n"
         f"- Second-hop references per expanded neighbor: {args.second_hop_per_neighbor}\n"
         f"- Manual semantic-edge overrides matched: {manual_override_count}\n\n"
-        "## Semantic Edge Counts\n\n"
+        + (
+            "## OpenAlex Matching Diagnostics\n\n"
+            + "\n".join(
+                f"- `{item['bibcode']}`: {item.get('reason', 'unmatched')} - {item.get('title', '')}"
+                for item in missing_core
+            )
+            + "\n\n"
+            if missing_core else ""
+        )
+        + "## Semantic Edge Counts\n\n"
         + "\n".join(f"- `{relation}`: {count}" for relation, count in sorted(relation_counts.items()))
         + "\n\n## External Comparison Candidates\n\n"
         + "\n".join(
@@ -340,6 +407,7 @@ def main() -> None:
             {
                 "lineage_bibcodes": len(lineage),
                 "matched_lineage_bibcodes": len(core_works),
+                "missing_lineage_bibcodes": len(missing_core),
                 "nodes": len(nodes),
                 "edges": len(semantic_edges),
                 "relations": dict(relation_counts),
