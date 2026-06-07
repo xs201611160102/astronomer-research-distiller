@@ -85,8 +85,8 @@ def fetch_json(url: str, cache_path: Path, delay: float) -> dict:
             time.sleep(delay)
             return payload
         except HTTPError as error:
-            if error.code == 404:
-                write_json(cache_path, {})
+            if error.code in {400, 404}:
+                write_json(cache_path, {"_error": f"HTTP {error.code}", "_url": url})
                 return {}
             if error.code not in {429, 500, 502, 503, 504} or attempt == 2:
                 raise
