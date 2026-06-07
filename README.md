@@ -40,7 +40,7 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 8. 自动生成论文卡片、证据账本、前三作者合作图、内部引用边、更新差异和时间切分验证模板。
 9. 围绕谱系核心论文构建有界一至二跳引用邻域；引用边语义自动标签必须标为启发式判断，并允许人工覆盖。
 10. 从引用邻域生成外部方法对照候选，并使用多个时间截止点做滚动 holdout 回测。
-11. 将人工阅读全文得到的谱系论文卡片与机器骨架分开保存：方法基线、关键扩展和边界变化标为 `deep`，应用、综述、会议摘要和过渡节点标为 `context`。从本地全文抽取核心引用上下文，仅把会改变谱系的少量歧义边交给用户裁决。
+11. 将人工阅读全文得到的谱系论文卡片与机器骨架分开保存：方法基线、关键扩展和边界变化标为 `deep`，应用、综述、会议摘要和过渡节点标为 `context`。深读卡片的 `source_lines` 会被 `render_deep_cards.py` 渲染到 Markdown，方便逐条回查；从本地全文抽取核心引用上下文，仅把会改变谱系的少量歧义边交给用户裁决。
 12. 维护方法适用边界、版本与勘误关系、原子结论账本、刷新协议和异常日志。超出验证域且没有合理回退时明确拒绝套用；外部证据冲突时保留分歧。
 13. 使用保守刷新命令重建本地资产并输出人工复核队列；默认不联网、不覆盖人工策展 JSON。
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
@@ -100,7 +100,7 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 8. Generate paper cards, an evidence ledger, top-three-author collaboration graphs, internal citation edges, update diffs, and time-split validation templates.
 9. Build a bounded one-to-two-hop citation neighborhood around core lineage papers. Automatically assigned citation-edge semantics must be marked as heuristic and remain manually overrideable.
 10. Generate external method-comparison candidates from the citation neighborhood and use multiple cutoff years for rolling holdout checks.
-11. Keep manually read lineage paper cards separate from machine-generated skeletons. Mark method baselines, key extensions, and boundary changes as `deep`; mark applications, reviews, conference abstracts, and transition nodes as `context`. Extract core citation contexts from local full text and send only the small number of lineage-changing ambiguous edges to the user for judgment.
+11. Keep manually read lineage paper cards separate from machine-generated skeletons. Mark method baselines, key extensions, and boundary changes as `deep`; mark applications, reviews, conference abstracts, and transition nodes as `context`. `render_deep_cards.py` renders curated `source_lines` into Markdown so claims can be checked line by line. Extract core citation contexts from local full text and send only the small number of lineage-changing ambiguous edges to the user for judgment.
 12. Maintain method boundaries, version and erratum relations, an atomic-claim ledger, refresh protocols, and exception logs. Refuse to apply a method beyond its validated domain when there is no reasonable fallback. Preserve disagreements when external evidence conflicts.
 13. Use conservative refresh commands to rebuild local assets and output a manual-review queue. By default, do not use the network and do not overwrite manually curated JSON.
 14. Every generated astronomer skill must use a branch-aware evaluation protocol: first identify the researcher's actual research branches from their papers and `research-map.md`, classify each as `primary`, `supporting`, or `not applicable`, review relevant branches separately, and synthesize only after branch-level review is complete. Do not assume a fixed list of fields, and do not let the most obvious single thread dominate other genuinely relevant branches.

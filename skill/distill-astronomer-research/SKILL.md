@@ -59,8 +59,9 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
     `scripts/generate_rolling_holdout.py`, then complete a human-reviewed audit for
     multiple cutoff years when the corpus spans enough time.
 13. Distill themes from representative full texts and complete the paper cards for
-   lineage-defining papers. Preserve manually curated cards separately and render
-   them with `scripts/render_deep_cards.py`.
+   lineage-defining papers. Preserve manually curated cards separately, include
+   `source_lines` for claims that should be recheckable, and render them with
+   `scripts/render_deep_cards.py`.
 14. Extract core full-text citation contexts with
    `scripts/extract_citation_contexts.py`. Resolve clear method inheritance
    directly; ask the user only about ambiguous edges that would change the lineage.

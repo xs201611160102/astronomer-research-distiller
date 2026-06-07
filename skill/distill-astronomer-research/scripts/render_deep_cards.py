@@ -19,6 +19,15 @@ FIELDS = [
 ]
 
 
+def format_source_line(item) -> str:
+    if isinstance(item, dict):
+        line = item.get("line")
+        text = item.get("text", "")
+        prefix = f"Line {line}: " if line else ""
+        return f"- {prefix}{text}"
+    return f"- {item}"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cards", type=Path, required=True)
@@ -45,6 +54,10 @@ def main() -> None:
         )
         for key, label in FIELDS:
             lines.append(f"- {label}: {card[key]}")
+        source_lines = card.get("source_lines", [])
+        if source_lines:
+            lines.extend(["", "### Source Lines", ""])
+            lines.extend(format_source_line(item) for item in source_lines)
         lines.append("")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -11,6 +11,12 @@
     "systematics": "None.",
     "validation": "Smoke test.",
     "limitations": "Fixture only.",
-    "evidence_source": "text/2024Test....1A.txt lines 1-4"
+    "evidence_source": "text/2024Test....1A.txt lines 1-4",
+    "source_lines": [
+      {
+        "line": 1,
+        "text": "Fixture source line."
+      }
+    ]
   }
 ]
