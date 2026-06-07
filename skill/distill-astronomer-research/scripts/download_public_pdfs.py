@@ -47,15 +47,14 @@ def ordered_links(pdf_links: list[str], fallback_links: list[str]) -> list[str]:
 def download(url: str, destination: Path, connect_timeout: int, max_time: int) -> tuple[bool, str]:
     temporary = destination.with_suffix(".part")
     temporary.unlink(missing_ok=True)
-    result = subprocess.run(
-        [
-            "curl", "-L", "--fail", "--silent", "--show-error",
-            "--connect-timeout", str(connect_timeout), "--max-time", str(max_time),
-            "-o", str(temporary), url,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    command = [
+        "curl", "-L", "--fail", "--silent", "--show-error",
+        "--connect-timeout", str(connect_timeout),
+    ]
+    if max_time > 0:
+        command.extend(["--max-time", str(max_time)])
+    command.extend(["-o", str(temporary), url])
+    result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode == 0 and is_pdf(temporary):
         temporary.replace(destination)
         return True, ""
@@ -76,6 +75,12 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--connect-timeout", type=int, default=10)
     parser.add_argument("--max-time", type=int, default=45)
+    parser.add_argument(
+        "--arxiv-max-time",
+        type=int,
+        default=0,
+        help="Maximum total seconds for arXiv PDF downloads. Use 0 for no total-time limit.",
+    )
     parser.add_argument("--gateway-max-time", type=int, default=15)
     parser.add_argument("--record-timeout", type=int, default=90)
     parser.add_argument("--max-attempts-per-record", type=int, default=3)
@@ -92,14 +97,19 @@ def main() -> None:
         attempts = []
         links = ordered_links(item.get("pdf_links", []), fallbacks.get(item["bibcode"], []))
         for url in links[: max(0, args.max_attempts_per_record)]:
+            kind = url_kind(url)
             elapsed = time.monotonic() - started
-            if elapsed >= args.record_timeout:
+            if kind != "arxiv" and elapsed >= args.record_timeout:
                 attempts.append({"url": url, "error": f"record timeout after {elapsed:.1f}s before attempt"})
                 break
-            per_url_max_time = args.gateway_max_time if url_kind(url) == "ads_gateway" else args.max_time
-            remaining = max(1, int(args.record_timeout - elapsed))
-            ok, error = download(url, destination, args.connect_timeout, min(per_url_max_time, remaining))
-            attempts.append({"url": url, "kind": url_kind(url), "error": error})
+            if kind == "arxiv":
+                per_url_max_time = args.arxiv_max_time
+            else:
+                per_url_max_time = args.gateway_max_time if kind == "ads_gateway" else args.max_time
+                remaining = max(1, int(args.record_timeout - elapsed))
+                per_url_max_time = min(per_url_max_time, remaining)
+            ok, error = download(url, destination, args.connect_timeout, per_url_max_time)
+            attempts.append({"url": url, "kind": kind, "error": error})
             if ok:
                 return {**item, "download_status": "downloaded", "file": str(destination), "attempts": attempts}
         skipped = max(0, len(links) - len(attempts))
@@ -113,6 +123,7 @@ def main() -> None:
     progress(
         "download_public_pdfs: "
         f"records={total} workers={args.workers} max_time={args.max_time}s "
+        f"arxiv_max_time={'unlimited' if args.arxiv_max_time == 0 else str(args.arxiv_max_time) + 's'} "
         f"gateway_max_time={args.gateway_max_time}s record_timeout={args.record_timeout}s "
         f"max_attempts_per_record={args.max_attempts_per_record}"
     )

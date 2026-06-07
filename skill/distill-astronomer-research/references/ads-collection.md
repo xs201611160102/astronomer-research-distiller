@@ -72,9 +72,11 @@ requests `--include-conference-records`.
 
 The audit manifest includes arXiv PDF URLs when ADS identifiers contain arXiv
 IDs. `download_public_pdfs.py` orders links arXiv-first, then ADS EPRINT gateway,
-then configured fallback and publisher-style links. Its progress output and
-gateway/record timeouts are part of the corpus audit: preserve the download
-report even when some URLs are refused or skipped as long-tail failures.
+then configured fallback and publisher-style links. ArXiv downloads have no
+total-time cap by default because they are open and large PDFs may transfer
+slowly; gateway and publisher-style links still use timeouts to control refused
+or stalled long-tail failures. Preserve the download report even when some
+non-arXiv URLs are refused or skipped.
 
 ## Identity Checks
 

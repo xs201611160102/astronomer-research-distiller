@@ -109,6 +109,7 @@ python3 /path/to/skill/scripts/download_public_pdfs.py \
   --report metadata/correspondence_audit_download_report.json \
   --workers 6 \
   --max-time 45 \
+  --arxiv-max-time 0 \
   --gateway-max-time 15 \
   --record-timeout 90 \
   --max-attempts-per-record 3
@@ -127,8 +128,9 @@ lineage-defining. Use representative subsets only later, during deep reading.
 If some records are unavailable, keep the download report and completeness audit
 as the provenance. The downloader reports progress as records complete, tries
 arXiv PDF links before ADS gateway and publisher links when ADS identifiers expose
-an arXiv ID, and uses short gateway/record timeouts so refused or slow publisher
-links do not block the whole corpus.
+an arXiv ID, leaves arXiv downloads without a total-time cap by default, and uses
+short gateway/record timeouts so refused or slow publisher links do not block the
+whole corpus.
 
 Meeting abstracts, conference records, and symposium proceedings are excluded
 from the PDF audit manifest by default and written to
