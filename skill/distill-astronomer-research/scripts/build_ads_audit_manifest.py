@@ -35,9 +35,12 @@ def choose_pdf_links(links: list[dict]) -> list[str]:
 def arxiv_pdf_links(identifiers: list[str]) -> list[str]:
     links = []
     for identifier in identifiers or []:
-        match = re.search(r"(?:arXiv:|arxiv/)?(\d{4}\.\d{4,5})(?:v\d+)?", identifier, re.I)
+        match = re.search(r"(?:arXiv:|arxiv/)(\d{4}\.\d{4,5})(?:v\d+)?", identifier, re.I)
+        if not match:
+            match = re.match(r"\d{4}arXiv(\d{4})(\d{5})[A-Z]?$", identifier, re.I)
         if match:
-            links.append(f"https://arxiv.org/pdf/{match.group(1)}")
+            arxiv_id = match.group(1) if "." in match.group(1) else f"{match.group(1)}.{match.group(2)}"
+            links.append(f"https://arxiv.org/pdf/{arxiv_id}")
     return sorted(set(links))
 
 

@@ -18,5 +18,17 @@
     "authors_display": "Astronomer, Ada",
     "pub": "American Astronomical Society Meeting Abstracts #237",
     "links": []
+  },
+  {
+    "bibcode": "2025TestArxiv1A",
+    "title": "A Test arXiv Identifier Paper",
+    "authors_display": "Astronomer, Ada",
+    "identifier": [
+      "2024arXiv240711194T",
+      "arXiv:2407.11194",
+      "10.48550/arXiv.2407.11194",
+      "10.1016/j.ascom.2024.100893"
+    ],
+    "links": []
   }
 ]
