@@ -1,6 +1,27 @@
 # 天文学家论文蒸馏通用流程
 
-本项目将 ADS 优先的天文学家论文整理与研究方法蒸馏流程封装为 Codex skill。
+本项目将 ADS 优先的天文学家论文整理与研究方法蒸馏流程封装为 Codex skill。最终产物不是“模仿某位天文学家说话”的聊天角色，而是一个可追溯的研究方法数字人格：它把论文中的方法谱系、适用边界、验证习惯和回退策略组织成可调用的工作模型。
+
+## 蒸馏后的数字人格可以做什么
+
+安装某位天文学家的派生 skill 后，可以让它围绕该研究者论文中蒸馏出的研究框架工作：
+
+- 审阅论文、proposal、观测计划、catalog paper 和数据分析流程。
+- 判断目标问题关联哪些研究分支，并标记 `primary`、`supporting` 或 `not applicable`。
+- 给出可用的 baseline 方法、后续 refinement、必要输入、验证方案、系统误差和 failure boundary。
+- 判断你的数据或科学问题是否超出该方法的适用域，并给出 fallback 或 abstention 条件。
+- 对比目标论文与谱系核心论文、外部对照候选和已知方法边界。
+- 生成审稿意见、方法 checklist、验证计划、项目设计建议或刷新语料需求。
+
+示例调用：
+
+```text
+使用 ding-yuansen-research review 这篇论文。
+使用 yuan-haibo-research 评估这个测光校准方案。
+使用 xiang-maosheng-research 帮我设计 LAMOST stellar label pipeline 的验证计划。
+```
+
+严禁把派生 skill 当作本人代理、私人观点模拟器或完整书目数据库。它只能在来源证据和蒸馏出的研究方法边界内给出建议。
 
 ## 交付物
 
@@ -62,7 +83,28 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 
 # Astronomer Research Distiller
 
-This repository packages an ADS-first workflow for collecting an astronomer's papers and distilling their research methods into a reusable Codex skill.
+This repository packages an ADS-first workflow for collecting an astronomer's papers and distilling their research methods into a reusable Codex skill. The output is not a chatbot that imitates the astronomer; it is a traceable research-method digital persona built from papers, method lineage, evidence boundaries, validation habits, and fallback rules.
+
+## What A Distilled Persona Can Do
+
+After installing a derived astronomer skill, you can use it to:
+
+- review manuscripts, proposals, observing plans, catalog papers, and analysis workflows;
+- identify relevant research branches and classify them as `primary`, `supporting`, or `not applicable`;
+- recommend baseline methods, refinements, required inputs, validation checks, systematics, failure boundaries, and fallbacks;
+- decide whether a method applies to your data or should abstain outside its validated domain;
+- compare a target paper against lineage-defining papers, external comparison candidates, and known method boundaries;
+- draft review notes, method checklists, validation plans, project designs, or corpus-refresh requests.
+
+Example prompts:
+
+```text
+Use ding-yuansen-research to review this paper.
+Use yuan-haibo-research to evaluate this photometric calibration workflow.
+Use xiang-maosheng-research to design a validation plan for a LAMOST stellar-label pipeline.
+```
+
+Derived skills must not be used as personal representatives, private-opinion simulators, or complete bibliography databases. They should stay inside the source-backed research-method boundaries.
 
 ## Deliverables
 
