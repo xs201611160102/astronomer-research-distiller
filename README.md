@@ -16,9 +16,9 @@
 示例调用：
 
 ```text
-使用 ding-yuansen-research review 这篇论文。
-使用 yuan-haibo-research 评估这个测光校准方案。
-使用 xiang-maosheng-research 帮我设计 LAMOST stellar label pipeline 的验证计划。
+使用 zhang-san-research review 这篇论文。
+使用 li-si-research 评估这个测光校准方案。
+使用 zhang-san-research 帮我设计一个 stellar label pipeline 的验证计划。
 ```
 
 严禁把派生 skill 当作本人代理、私人观点模拟器或完整书目数据库。它只能在来源证据和蒸馏出的研究方法边界内给出建议。
@@ -99,9 +99,9 @@ After installing a derived astronomer skill, you can use it to:
 Example prompts:
 
 ```text
-Use ding-yuansen-research to review this paper.
-Use yuan-haibo-research to evaluate this photometric calibration workflow.
-Use xiang-maosheng-research to design a validation plan for a LAMOST stellar-label pipeline.
+Use zhang-san-research to review this paper.
+Use li-si-research to evaluate this photometric calibration workflow.
+Use zhang-san-research to design a validation plan for a stellar-label pipeline.
 ```
 
 Derived skills must not be used as personal representatives, private-opinion simulators, or complete bibliography databases. They should stay inside the source-backed research-method boundaries.
