@@ -19,7 +19,19 @@ FIELDS = [
 ]
 
 
-def format_source_line(item) -> str:
+def read_context(source_root: Path, source: str, line: int, context_lines: int) -> list[tuple[int, str]]:
+    path = Path(source)
+    if not path.is_absolute():
+        path = source_root / path
+    if not path.exists() or line < 1:
+        return []
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    start = max(1, line - context_lines)
+    end = min(len(lines), line + context_lines)
+    return [(number, lines[number - 1]) for number in range(start, end + 1)]
+
+
+def format_source_line(item, source_root: Path, context_lines: int) -> list[str]:
     if isinstance(item, dict):
         source = item.get("source")
         line = item.get("line")
@@ -30,21 +42,47 @@ def format_source_line(item) -> str:
         if line:
             parts.append(f"line {line}")
         prefix = f"{', '.join(parts)}: " if parts else ""
-        return f"- {prefix}{text}"
-    return f"- {item}"
+        rendered = [f"- {prefix}{text}"]
+        if source and isinstance(line, int) and context_lines > 0:
+            context = read_context(source_root, str(source), line, context_lines)
+            if context:
+                start = context[0][0]
+                end = context[-1][0]
+                rendered.append(f"  Context lines {start}-{end}:")
+                for number, context_text in context:
+                    marker = ">" if number == line else " "
+                    rendered.append(f"  {marker} {number}: {context_text}")
+        return rendered
+    return [f"- {item}"]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cards", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--source-root",
+        type=Path,
+        default=None,
+        help="Root used to resolve relative source paths in source_lines. Defaults to the cards file grandparent, or the current directory.",
+    )
+    parser.add_argument(
+        "--context-lines",
+        type=int,
+        default=1,
+        help="Number of neighboring lines to render on each side of a source line. Use 0 to disable.",
+    )
     args = parser.parse_args()
 
     cards = json.loads(args.cards.read_text(encoding="utf-8"))
+    source_root = args.source_root
+    if source_root is None:
+        source_root = args.cards.parent.parent if args.cards.parent.name == "distillation" else Path(".")
+    source_root = source_root.resolve()
     lines = [
         "# Deep Paper Cards",
         "",
-        "These cards are Codex syntheses from downloaded full text. Use the ADS bibcode and listed text lines to recheck precise claims.",
+        "These cards are Codex syntheses from downloaded full text. Use the ADS bibcode, listed text lines, and rendered neighboring context to recheck precise claims.",
         "",
     ]
     for card in cards:
@@ -63,7 +101,8 @@ def main() -> None:
         source_lines = card.get("source_lines", [])
         if source_lines:
             lines.extend(["", "### Source Lines", ""])
-            lines.extend(format_source_line(item) for item in source_lines)
+            for item in source_lines:
+                lines.extend(format_source_line(item, source_root, args.context_lines))
         lines.append("")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

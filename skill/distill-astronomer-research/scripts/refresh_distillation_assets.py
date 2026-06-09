@@ -121,15 +121,17 @@ def main() -> None:
         )
 
     curated = [
-        ("render_deep_cards.py", "deep-paper-cards.json", "deep-paper-cards.md", "--cards"),
+        ("render_deep_cards.py", "deep-paper-cards.json", "deep-paper-cards.md", "--cards", ["--source-root", project]),
         ("render_method_boundaries.py", "method-boundaries.json", "method-boundaries.md", "--boundaries"),
         ("render_version_relations.py", "version-relations.json", "version-relations.md", "--relations"),
         ("render_claim_ledger.py", "atomic-claims.json", "atomic-claim-ledger.md", "--ledger"),
     ]
-    for script, source, output, flag in curated:
+    for item in curated:
+        script, source, output, flag = item[:4]
+        extra_args = item[4] if len(item) > 4 else []
         source_path = project / "distillation" / source
         if source_path.exists():
-            run(script_dir, script, flag, source_path, "--output", references / output)
+            run(script_dir, script, flag, source_path, "--output", references / output, *extra_args)
 
     seed_path = project / "distillation/core-citation-context-seeds.json"
     context_path = project / "metadata/core-citation-contexts.json"

@@ -157,7 +157,8 @@ python3 "$skill_dir/scripts/generate_rolling_holdout.py" \
   --output "$project_dir/skill/ada-astronomer-research/references/rolling-holdout-evaluation.md"
 python3 "$skill_dir/scripts/render_deep_cards.py" \
   --cards "$fixture_dir/deep-paper-cards.json" \
-  --output "$project_dir/skill/ada-astronomer-research/references/deep-paper-cards.md"
+  --output "$project_dir/skill/ada-astronomer-research/references/deep-paper-cards.md" \
+  --source-root "$project_dir"
 python3 "$skill_dir/scripts/extract_citation_contexts.py" \
   --seeds "$fixture_dir/core-citation-context-seeds.json" \
   --text-dir "$project_dir/text" \
@@ -248,6 +249,9 @@ assert "Can the fixture render a deep card?" in deep_cards
 assert "Card level: `deep`" in deep_cards
 assert "text/2024Test....1A.txt, line 1" in deep_cards
 assert "Fixture source line." in deep_cards
+assert "Context lines 1-2" in deep_cards
+assert "> 1: Corresponding author: Ada Astronomer" in deep_cards
+assert "  2: ada.old@example.edu" in deep_cards
 contexts = json.loads((project / "metadata/core-citation-contexts.json").read_text())
 assert contexts[0]["hit_count"] == 1
 boundaries = (project / "skill/ada-astronomer-research/references/method-boundaries.md").read_text()
