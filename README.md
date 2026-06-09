@@ -13,12 +13,24 @@
 - 对比目标论文与谱系核心论文、外部对照候选和已知方法边界。
 - 生成审稿意见、方法 checklist、验证计划、项目设计建议或刷新语料需求。
 
+## 数据落地评审
+
+如果你提供数据文件位置，蒸馏后的数字人格可以先把自己的方法判断翻译成可检查的数据假设，再由 Codex 读取数据执行一部分验证。例如先检查样本范围、质量标记、训练集/目标集分布、残差趋势、空间系统误差或选择函数，再根据结果修正评审意见。
+
+典型流程：
+
+1. 数字人格根据自身方法谱系提出需要验证的假设。
+2. 将假设改写成可运行的数据检查、统计量或图表。
+3. Codex 读取你给出的 FITS、CSV、VOTable、Parquet 或其他本地数据文件执行检查。
+4. 数字人格根据真实数据结果更新判断，给出支持、限制、fallback 或 abstention。
+
 示例调用：
 
 ```text
 使用 zhang-san-research review 这篇论文。
 使用 li-si-research 评估这个测光校准方案。
 使用 zhang-san-research 帮我设计一个 stellar label pipeline 的验证计划。
+使用 li-si-research 查看 /path/to/catalog.fits，先提出 5 个可验证检查，再读取数据验证并修正评估。
 ```
 
 严禁把派生 skill 当作本人代理、私人观点模拟器或完整书目数据库。它只能在来源证据和蒸馏出的研究方法边界内给出建议。
@@ -67,15 +79,16 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
 15. 每个生成型 skill 必须携带 `references/branch-evaluation-protocol.md`，使用统一覆盖矩阵和分支级报告模板，使不同天文学家的论文审查可复现、可比较。
 16. 每个生成型 skill 必须携带数字人格使用说明：说明它能做论文/方案/工作流审查、方法设计、适用性 triage、谱系比较和刷新诊断；同时明确它是论文蒸馏出的研究方法操作模型，不是对天文学家本人的模拟或代言。
-17. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
-18. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；arXiv 默认不设置总下载时间限制，下载过程应输出逐条进度，默认使用 `.part` 文件断点续传，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
-19. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
-20. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
-21. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。arXiv 预印本若在 metadata 或全文中显示 proceedings 语境，`build_formal_manifest.py` 会以 `record_flags` 标记并默认降为 supplemental。
-22. PDF 文本抽取应传入 `--manifest metadata/correspondence_audit_manifest.json`，只抽取当前 audit manifest 内的 PDF，避免旧下载、会议记录或其他目录残留污染 completeness audit。
-23. 下载、文本抽取和通讯作者扫描报告使用统一 `{summary, records}` JSON 结构；读取脚本同时兼容旧的顶层数组报告。
-24. Rolling holdout 生成必须显式使用 `--cutoffs 2017,2019,...` 或重复 `--cutoff YEAR`；脚本禁用 argparse 缩写，避免 `--cutoff` 被误读成 `--cutoffs` 并静默覆盖。
-25. 深读卡片渲染默认使用 `--source-root` 解析 `source_lines.source`，并用 `--context-lines` 输出邻近全文行；如果源文件缺失则保留原始单行引用，不阻塞旧项目渲染。
+17. 数据落地评审必须先把方法判断转成可运行检查；所有数据结论必须来自实际读取的数据、可复现代码输出或图表，不得用论文经验脑补。
+18. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
+19. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；arXiv 默认不设置总下载时间限制，下载过程应输出逐条进度，默认使用 `.part` 文件断点续传，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
+20. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
+21. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
+22. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。arXiv 预印本若在 metadata 或全文中显示 proceedings 语境，`build_formal_manifest.py` 会以 `record_flags` 标记并默认降为 supplemental。
+23. PDF 文本抽取应传入 `--manifest metadata/correspondence_audit_manifest.json`，只抽取当前 audit manifest 内的 PDF，避免旧下载、会议记录或其他目录残留污染 completeness audit。
+24. 下载、文本抽取和通讯作者扫描报告使用统一 `{summary, records}` JSON 结构；读取脚本同时兼容旧的顶层数组报告。
+25. Rolling holdout 生成必须显式使用 `--cutoffs 2017,2019,...` 或重复 `--cutoff YEAR`；脚本禁用 argparse 缩写，避免 `--cutoff` 被误读成 `--cutoffs` 并静默覆盖。
+26. 深读卡片渲染默认使用 `--source-root` 解析 `source_lines.source`，并用 `--context-lines` 输出邻近全文行；如果源文件缺失则保留原始单行引用，不阻塞旧项目渲染。
 
 ## 校验
 
@@ -96,12 +109,24 @@ After installing a derived astronomer skill, you can use it to:
 - compare a target paper against lineage-defining papers, external comparison candidates, and known method boundaries;
 - draft review notes, method checklists, validation plans, project designs, or corpus-refresh requests.
 
+## Data-Grounded Review
+
+If you provide a data path, a distilled persona can translate its method judgments into testable data checks before updating its opinion. It can ask Codex to read local FITS, CSV, VOTable, Parquet, or other data files; inspect sample coverage, quality flags, train-target distribution shifts, residual trends, spatial systematics, or selection functions; and then revise the review based on actual outputs.
+
+Typical loop:
+
+1. The persona proposes testable assumptions from its method lineage.
+2. The assumptions are rewritten as runnable checks, statistics, or plots.
+3. Codex reads the supplied data and executes the checks.
+4. The persona updates its assessment with support, limitations, fallbacks, or abstention conditions.
+
 Example prompts:
 
 ```text
 Use zhang-san-research to review this paper.
 Use li-si-research to evaluate this photometric calibration workflow.
 Use zhang-san-research to design a validation plan for a stellar-label pipeline.
+Use li-si-research to inspect /path/to/catalog.fits, propose five data checks, run them, and revise the assessment.
 ```
 
 Derived skills must not be used as personal representatives, private-opinion simulators, or complete bibliography databases. They should stay inside the source-backed research-method boundaries.
