@@ -38,6 +38,20 @@
 - Require one row for every `research-map.md` branch.
 - Require one review block for every `primary` and `supporting` branch.
 
+## digital-persona-operating-guide.md
+
+- State what the distilled digital persona can do: review, design, triage,
+  compare, translate methods into protocols, and identify refresh needs.
+- State how to invoke it with a paper, proposal, workflow, data description,
+  arXiv link, DOI, ADS bibcode, or local file path.
+- Define output modes such as `review`, `design`, `triage`, `comparison`,
+  `translation`, and `refresh`.
+- Require branch relevance matrix, branch-level findings, validation,
+  systematics, failure boundaries, fallback, and source-backed claims for
+  serious review or design tasks.
+- State that the skill is a research-method operating model, not a simulation or
+  impersonation of the astronomer.
+
 ## source-policy.md
 
 - Define evidence levels.

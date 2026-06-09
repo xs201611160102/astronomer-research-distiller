@@ -45,15 +45,16 @@ ls ~/.codex/skills/distill-astronomer-research/SKILL.md
 13. 使用保守刷新命令重建本地资产并输出人工复核队列；默认不联网、不覆盖人工策展 JSON。
 14. 每个生成型天文学家 skill 必须采用多分支评估协议：先从该研究者自己的论文和 `research-map.md` 中识别实际研究方向，标记 `primary`、`supporting` 或 `not applicable`，分别完成分支级审查后再统合。不要预设固定领域清单，也不要让最显眼的单一主线压过其他真实相关分支。
 15. 每个生成型 skill 必须携带 `references/branch-evaluation-protocol.md`，使用统一覆盖矩阵和分支级报告模板，使不同天文学家的论文审查可复现、可比较。
-16. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
-17. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；arXiv 默认不设置总下载时间限制，下载过程应输出逐条进度，默认使用 `.part` 文件断点续传，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
-18. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
-19. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
-20. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。arXiv 预印本若在 metadata 或全文中显示 proceedings 语境，`build_formal_manifest.py` 会以 `record_flags` 标记并默认降为 supplemental。
-21. PDF 文本抽取应传入 `--manifest metadata/correspondence_audit_manifest.json`，只抽取当前 audit manifest 内的 PDF，避免旧下载、会议记录或其他目录残留污染 completeness audit。
-22. 下载、文本抽取和通讯作者扫描报告使用统一 `{summary, records}` JSON 结构；读取脚本同时兼容旧的顶层数组报告。
-23. Rolling holdout 生成必须显式使用 `--cutoffs 2017,2019,...` 或重复 `--cutoff YEAR`；脚本禁用 argparse 缩写，避免 `--cutoff` 被误读成 `--cutoffs` 并静默覆盖。
-24. 深读卡片渲染默认使用 `--source-root` 解析 `source_lines.source`，并用 `--context-lines` 输出邻近全文行；如果源文件缺失则保留原始单行引用，不阻塞旧项目渲染。
+16. 每个生成型 skill 必须携带数字人格使用说明：说明它能做论文/方案/工作流审查、方法设计、适用性 triage、谱系比较和刷新诊断；同时明确它是论文蒸馏出的研究方法操作模型，不是对天文学家本人的模拟或代言。
+17. 语料收集阶段必须先用 `identity_filter` 配置和 `filter_ads_identity_candidates.py` 将 ADS raw 搜索拆成目标作者记录与同名误配记录，再合并过滤后的 ADS 来源并尝试下载全量公开 PDF；代表性论文只用于后续深读和方法谱系，不得替代全量下载。运行 `audit_corpus_completeness.py` 记录 ADS、下载、抽文本和正式 manifest 的数量差异。
+18. PDF 下载器必须优先尝试 ADS identifier 暴露出的 arXiv PDF，再尝试 ADS gateway 和配置回退链接；arXiv 默认不设置总下载时间限制，下载过程应输出逐条进度，默认使用 `.part` 文件断点续传，并通过 gateway 短超时、单记录超时和单记录最大尝试数控制出版社拒绝或慢链接造成的长尾等待。
+19. 通讯作者审计必须在全文抽取后运行：`verify_correspondence_markers.py` 同时记录明确通讯作者表述和 PDF 邮箱标记；已知当前或历史邮箱时，应额外做 ADS full-text 邮箱检索作为通讯作者候选召回来源，但不得绕过 PDF/出版社证据分级。
+20. ADS API 采集默认追加 `database:astronomy`，减少 physics/general 库的同名污染；只有在做误配审计或目标作者确有跨库关键论文时，才显式使用 `--database all`。
+21. 会议摘要、会议记录和 symposium proceedings 默认不进入 PDF 下载审计；`build_ads_audit_manifest.py` 会将它们写入 `metadata/conference_records_excluded_from_audit.json`，除非用户明确要求 `--include-conference-records`。arXiv 预印本若在 metadata 或全文中显示 proceedings 语境，`build_formal_manifest.py` 会以 `record_flags` 标记并默认降为 supplemental。
+22. PDF 文本抽取应传入 `--manifest metadata/correspondence_audit_manifest.json`，只抽取当前 audit manifest 内的 PDF，避免旧下载、会议记录或其他目录残留污染 completeness audit。
+23. 下载、文本抽取和通讯作者扫描报告使用统一 `{summary, records}` JSON 结构；读取脚本同时兼容旧的顶层数组报告。
+24. Rolling holdout 生成必须显式使用 `--cutoffs 2017,2019,...` 或重复 `--cutoff YEAR`；脚本禁用 argparse 缩写，避免 `--cutoff` 被误读成 `--cutoffs` 并静默覆盖。
+25. 深读卡片渲染默认使用 `--source-root` 解析 `source_lines.source`，并用 `--context-lines` 输出邻近全文行；如果源文件缺失则保留原始单行引用，不阻塞旧项目渲染。
 
 ## 校验
 
@@ -106,16 +107,17 @@ Open a new Codex thread, or restart Codex, so the new skill is loaded. You can t
 13. Use conservative refresh commands to rebuild local assets and output a manual-review queue. By default, do not use the network and do not overwrite manually curated JSON.
 14. Every generated astronomer skill must use a branch-aware evaluation protocol: first identify the researcher's actual research branches from their papers and `research-map.md`, classify each as `primary`, `supporting`, or `not applicable`, review relevant branches separately, and synthesize only after branch-level review is complete. Do not assume a fixed list of fields, and do not let the most obvious single thread dominate other genuinely relevant branches.
 15. Every generated skill must include `references/branch-evaluation-protocol.md`, using a shared coverage matrix and branch-level report template so reviews of different astronomers remain reproducible and comparable.
-16. Corpus collection must first use the `identity_filter` config and `filter_ads_identity_candidates.py` to split raw ADS searches into target-author records and same-name rejects, then merge the filtered ADS source and attempt to download every publicly accessible PDF. Representative papers are only for later deep reading and method-lineage synthesis; they cannot replace full-corpus download. Run `audit_corpus_completeness.py` to record ADS, download, text-extraction, and formal-manifest counts.
-17. Run `check_ads_access.py` before ADS collection. If `ADS_DEV_KEY`, `ADS_TOKEN`, or keychain service `ads-api-token` is missing, ask the user to provide an ADS token and label any fallback corpus as incomplete.
-18. The PDF downloader must try arXiv PDFs exposed by ADS identifiers before ADS gateway and configured fallback links. ArXiv downloads have no total-time cap by default; `.part` files are resumed with `curl -C -` by default, and gateway, per-record, and max-attempt controls prevent refused or slow publisher links from stalling the corpus.
-19. Corresponding-author auditing is required after text extraction. `verify_correspondence_markers.py` keeps explicit corresponding-author wording separate from PDF email markers; known current or historical emails should also drive ADS full-text searches for candidate recall, but final roles still follow the evidence policy.
-20. ADS API collection appends `database:astronomy` by default to reduce same-name pollution from physics/general records. Use `--database all` only for spillover audits or important cross-database target publications.
-21. Meeting abstracts, conference records, and symposium proceedings are excluded from PDF download audits by default. `build_ads_audit_manifest.py` writes them to `metadata/conference_records_excluded_from_audit.json`; include them only with an explicit `--include-conference-records` request. If an arXiv eprint carries proceedings context in metadata or extracted text, `build_formal_manifest.py` marks it with `record_flags` and tiers it as supplemental by default.
-22. PDF text extraction should pass `--manifest metadata/correspondence_audit_manifest.json` so only PDFs in the active audit manifest are extracted; this keeps stale downloads, conference records, and other directory leftovers out of completeness audits.
-23. Download, text-extraction, and correspondence reports use a common `{summary, records}` JSON shape. Readers remain backward-compatible with older top-level array reports.
-24. Rolling holdout generation requires explicit `--cutoffs 2017,2019,...` or repeated `--cutoff YEAR`; argparse abbreviation is disabled so misspelled cutoff options fail instead of silently changing the split set.
-25. Deep-card rendering resolves `source_lines.source` relative to `--source-root` and writes neighboring full-text context with `--context-lines`; missing source files fall back to the original curated single-line citation.
+16. Every generated skill must include a digital-persona operating guide: state that it can review papers, proposals, and workflows, design validation plans, triage applicability, compare against the lineage, and diagnose refresh needs; also state that it is a research-method operating model, not an impersonation or representative of the astronomer.
+17. Corpus collection must first use the `identity_filter` config and `filter_ads_identity_candidates.py` to split raw ADS searches into target-author records and same-name rejects, then merge the filtered ADS source and attempt to download every publicly accessible PDF. Representative papers are only for later deep reading and method-lineage synthesis; they cannot replace full-corpus download. Run `audit_corpus_completeness.py` to record ADS, download, text-extraction, and formal-manifest counts.
+18. Run `check_ads_access.py` before ADS collection. If `ADS_DEV_KEY`, `ADS_TOKEN`, or keychain service `ads-api-token` is missing, ask the user to provide an ADS token and label any fallback corpus as incomplete.
+19. The PDF downloader must try arXiv PDFs exposed by ADS identifiers before ADS gateway and configured fallback links. ArXiv downloads have no total-time cap by default; `.part` files are resumed with `curl -C -` by default, and gateway, per-record, and max-attempt controls prevent refused or slow publisher links from stalling the corpus.
+20. Corresponding-author auditing is required after text extraction. `verify_correspondence_markers.py` keeps explicit corresponding-author wording separate from PDF email markers; known current or historical emails should also drive ADS full-text searches for candidate recall, but final roles still follow the evidence policy.
+21. ADS API collection appends `database:astronomy` by default to reduce same-name pollution from physics/general records. Use `--database all` only for spillover audits or important cross-database target publications.
+22. Meeting abstracts, conference records, and symposium proceedings are excluded from PDF download audits by default. `build_ads_audit_manifest.py` writes them to `metadata/conference_records_excluded_from_audit.json`; include them only with an explicit `--include-conference-records` request. If an arXiv eprint carries proceedings context in metadata or extracted text, `build_formal_manifest.py` marks it with `record_flags` and tiers it as supplemental by default.
+23. PDF text extraction should pass `--manifest metadata/correspondence_audit_manifest.json` so only PDFs in the active audit manifest are extracted; this keeps stale downloads, conference records, and other directory leftovers out of completeness audits.
+24. Download, text-extraction, and correspondence reports use a common `{summary, records}` JSON shape. Readers remain backward-compatible with older top-level array reports.
+25. Rolling holdout generation requires explicit `--cutoffs 2017,2019,...` or repeated `--cutoff YEAR`; argparse abbreviation is disabled so misspelled cutoff options fail instead of silently changing the split set.
+26. Deep-card rendering resolves `source_lines.source` relative to `--source-root` and writes neighboring full-text context with `--context-lines`; missing source files fall back to the original curated single-line citation.
 
 ## Validation
 

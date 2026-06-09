@@ -17,6 +17,8 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
 5. Read [project-layout.md](references/project-layout.md) before creating files.
 6. Read [branch-evaluation-protocol.md](references/branch-evaluation-protocol.md)
    before generating the review workflow of a derived skill.
+7. Read [digital-persona-operating-model.md](references/digital-persona-operating-model.md)
+   before explaining what a distilled skill can do or how users should invoke it.
 
 ## Required Workflow
 
@@ -71,14 +73,18 @@ skill. Prefer NASA ADS for astronomy bibliography and preserve evidence provenan
     manuscript, workflow, or proposal review to enumerate all branches in
     `research-map.md`, classify their relevance, review each relevant branch
     separately, and synthesize only after the branch-level reviews are complete.
-17. Curate and render method boundaries, version relations, and atomic claims
+17. Add a short operating guide to the derived skill explaining what the digital
+    persona can do, how to invoke it, expected output modes, and its evidence
+    boundaries. It must state that the skill is a research-method operating model,
+    not an impersonation of the astronomer.
+18. Curate and render method boundaries, version relations, and atomic claims
     with `scripts/render_method_boundaries.py`,
     `scripts/render_version_relations.py`, and `scripts/render_claim_ledger.py`.
     Maintain `refresh-protocol.md` and `exceptions.md`.
-18. Use `scripts/refresh_distillation_assets.py` for conservative local refreshes.
+19. Use `scripts/refresh_distillation_assets.py` for conservative local refreshes.
     It must preserve curated JSON, skip network graph refresh unless explicitly
     requested, and generate a manual-review queue.
-19. Generate and validate the derived astronomer skill, update the project README,
+20. Generate and validate the derived astronomer skill, update the project README,
     and install only after review.
 
 ## Guardrails
@@ -123,6 +129,7 @@ The generated astronomer skill must include:
 - `references/method-lineage.md`
 - `references/method-playbook.md`
 - `references/branch-evaluation-protocol.md`
+- `references/digital-persona-operating-guide.md`
 - `references/source-policy.md`
 - `references/paper-index.md`
 - `references/researcher-profile.md`
